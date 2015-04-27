@@ -1,0 +1,47 @@
+function R = regIntervals(ep,N)
+
+%  Split an intervalSet object in N segments of equal length
+%  
+%  	USAGE
+%  	R = regIntervals(ep,N)
+%  	
+%  	INPUTS:
+%  	ep: original intervalSet
+%  	N: number of desired segments
+%  	
+%  	OUTPUT:
+%  	R - a cell array of splitted intervalSet objects
+
+
+% copyright (c) 2004-2011 Francesco P. Battaglia & Adrien Peyrache
+% This software is released under the GNU GPL
+% www.gnu.org/copyleft/gpl.html
+ 
+N =round(N);
+R = cell(N,1);
+
+l = Data(length(ep));
+ls = sum(l)/N;
+
+st = Start(ep);
+en = End(ep);
+
+if length(st)>1
+    offSet = [st(1);st(2:end)-en(1:end-1)];
+    stN = [st-cumsum(offSet)];
+    enN = [en-cumsum(offSet)];
+    epN = intervalSet(stN,enN);
+else
+    offset = [];
+    epN = ep;
+end
+
+epM = intervalSet(st(1):ls:st(1)+(N-1)*ls,ls:ls:st(1)+N*ls);
+
+for ii=1:N
+    ept = intersect(epN,subset(epM,ii));
+    ix = Restrict(ts(Start(ept))
+    R{ii} = intervalSet(Start(ept)+cumsum(offSet),End(ept)+cumsum(offset));
+end
+
+

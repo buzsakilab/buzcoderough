@@ -1,0 +1,18 @@
+function [whl,t,GoodRanges] = LoadPosition(fbasename)
+
+% USAGE
+% [whl,t,GoodRanges,ep] = LoadPosition(fbasename)
+% 
+% output:
+%   whl: the position matrix
+%   t: time vector
+%   Good Ranges: 
+
+Fs = 1250/32;
+
+whlt = dlmread([fbasename '.whl']);
+
+[whl GoodRanges] = CleanWhlForR(whlt);
+
+t = (1:size(whlt,1))'/Fs;
+GoodRanges = GoodRanges/Fs;
