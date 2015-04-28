@@ -39,6 +39,11 @@ function [detected_swr] = detect_swr(Filebase, Channels, Epochs, varargin)
 %       labeled .evt file you created: name the .evt file Filebase.rip.evt 
 %       with events 'start' and 'stop'.
 %
+%       -To improve detection, statistical thresholds are set using a local
+%       window around each putative detection. This means global changes in
+%       SWR and ripple magnitude aren't documented. Though, in exchange, this
+%       routine is robust to non-stationarities in the data.
+%
 % author: John D. Long II, PhD   contact: jlong29@gmail.com
 %
 %%%%%%%%%%%%%%
@@ -172,7 +177,7 @@ else
     filechk = dir(Filebase);
     if isempty(filechk)
         error(['%s: incompatible format for 1st argument (Filebase)\n', ...
-        	   '\tIf user supplied a relative path, the .xml and all\n', ...
+               '\tIf user supplied a relative path, the .xml and all\n', ...
                '\trelevant files must be in the current directory.\n'],mfname);
     end
 end
@@ -202,7 +207,7 @@ elseif ~isempty(dir([Filebase '.lfp']))
     lfp_info = dir(lfp_file);
 else
     error(['%s: Field potential file could not be found\n', ...
-    	  '\tThere is neither a .eeg nor a .lfp file matching the\n', ...
+          '\tThere is neither a .eeg nor a .lfp file matching the\n', ...
           '\tbase name of the directory supplied by the user.\n'],mfname);
 end
 
