@@ -43,7 +43,7 @@ cd(basedir);
 % fprintf('%s\n', basedir);
 
 if ~isempty(strfind(upper(computer), 'WIN'))
-    eval('del *.fil');
+    eval('!del *.fil');
 else
     eval('!rm *.fil > /dev/null 2>&1');
 end
