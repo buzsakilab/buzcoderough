@@ -42,12 +42,13 @@ end
 if ~isstring(shape,'rectangle','circle'),
   error('Incorrect shape (type ''help <a href="matlab:help DefineZone">DefineZone</a>'' for details).');
 end
-points = round(points);
 
+points = round(points);
 width = s(1);
 height = s(2);
 
-zone = logical(zeros(width,height));
+% zone = logical(zeros(width,height)); % old version
+zone = logical(zeros(height,width)); % new version
 
 if strcmp(lower(shape),'rectangle'),
 	if length(points) ~= 4,
@@ -68,9 +69,11 @@ elseif strcmp(lower(shape),'circle'),
 	for i = 1:width,
 		for j = 1:height,
 			if (x-i)^2+(y-j)^2 <= r^2,
-				zone(j,i) = 1;
+                zone(j,i) = 1;
 			end
 		end
 	end
 end
 
+% trimming down zone matrix
+zone = zone(1:height, 1:width); % new version

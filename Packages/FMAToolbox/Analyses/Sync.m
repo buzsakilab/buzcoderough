@@ -10,9 +10,7 @@ function [synchronized,indices] = Sync(samples,sync,varargin)
 %
 %    [synchronized,indices] = Sync(samples,sync,<options>)
 %
-%    samples        either a vector of timestamps (for a point process) or
-%                   an Mx(N+1) matrix containing M (timestamp,values)
-%                   (N+1)-tuples (for N time-varying measures).
+%    samples        <a href="matlab:help samples">samples</a> to synchronize
 %    sync           timestamps to synchronize on (e.g., brain stimulations)
 %    <options>      optional list of property-value pairs (see table below)
 %
@@ -39,7 +37,7 @@ function [synchronized,indices] = Sync(samples,sync,varargin)
 %
 %    See also SyncHist, SyncMap, PlotSync, PETHTransition.
 
-% Copyright (C) 2004-2011 by Michaël Zugaro
+% Copyright (C) 2004-2014 by Michaël Zugaro
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -86,9 +84,14 @@ for i = 1:2:length(varargin),
 	end
 end
 
+% Make sure samples and sync events are sorted in time
+samples = sortrows(samples,1);
+sync = sortrows(sync,1);
 nSync = length(sync);
 
-disp([num2str(nSync) ' synchronizing events to process...']) ;
+if verbose,
+	disp([num2str(nSync) ' synchronizing events to process...']) ;
+end
 
 % Output matrices will be allocated in arbitrarily large blocks (and will be trimmed down later)
 % This will be much faster than increasing matrix size by the exact appropriate amount for each synchronizing event
