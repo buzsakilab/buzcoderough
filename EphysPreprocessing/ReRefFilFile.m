@@ -2,8 +2,13 @@ function [returnVar,msg] = ReRefFilFile(fname,nbChan,refChan,rerefChan)
 
 % USAGE:
 %     ReRefFilFile(fbasename, nbChan, refChan, rerefChan)
-%     This function substracts one channel or the median of serie of
-%     channels (the 'reference' channel) from other channels
+%     This function substracts one channel or the median of a series of
+%     channels (the 'reference' channel) from other channels. 
+%
+%     Note: this uses 1-based indexing, not zero-based, so you have to take
+%     the channel number in neuroscope and add one to it, e.g. channel 72 
+%     in neuroscope is channel 73 here.
+%
 % INPUTS:
 %     fname: fil file name. Could be also a file basename not finishing
 %     with '.fil' and the program will be then executed for all the fil
