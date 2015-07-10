@@ -7,7 +7,7 @@ HOMEDIR=/home/luke
 #
 # usage: type 'sudo crontab -e' and add the following line (without the #)
 # 0 3 * * * env DISPLAY=0 /home/luke/scripts/zfscheck
-# (edit the path as necessary
+# (edit the path as necessary)
 #
 # Luke Sjulson, 2014-08-05
 
@@ -42,7 +42,7 @@ then
 	done
 
 else
-	su $USER -c $'/usr/bin/notify-send --urgency=critical --expire-time=1000000000 "zfscheck: all zpools are healthy at `date`"'
+#	su $USER -c $'/usr/bin/notify-send --urgency=critical --expire-time=1000000000 "zfscheck: all zpools are healthy at `date`"'
 	echo "zfscheck: all zpools are healthy at `date`" | wall
 fi
 
