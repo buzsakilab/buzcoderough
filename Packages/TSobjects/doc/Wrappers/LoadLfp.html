@@ -35,7 +35,7 @@
 
  INPUT:
      fbasename: session file basename
-     nchannels: total number of channels in the 
+     nchannels: total number of channels in the file
      channels: vector of channel index
 
  OPTION
@@ -65,7 +65,7 @@ This function is called by:
 0008 <span class="comment">%</span>
 0009 <span class="comment">% INPUT:</span>
 0010 <span class="comment">%     fbasename: session file basename</span>
-0011 <span class="comment">%     nchannels: total number of channels in the</span>
+0011 <span class="comment">%     nchannels: total number of channels in the file</span>
 0012 <span class="comment">%     channels: vector of channel index</span>
 0013 <span class="comment">%</span>
 0014 <span class="comment">% OPTION</span>
@@ -109,14 +109,18 @@ This function is called by:
 0052   <span class="keyword">end</span>
 0053 <span class="keyword">end</span>
 0054         
-0055         
-0056         
-0057 lfp = LoadBinary([fbasename <span class="string">'.eeg'</span>],<span class="string">'nchannels'</span>,nchannels,<span class="string">'channels'</span>,channels,<span class="string">'duration'</span>,duration,<span class="string">'precision'</span>,precision,<span class="string">'start'</span>,start,<span class="string">'frequency'</span>,frequency);
-0058 t = 10000*[0:length(lfp)-1]/1250;
-0059 
-0060 lfp = tsd(t',lfp);
-0061 
-0062</pre></div>
-<hr><address>Generated on Wed 16-Oct-2013 16:05:38 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+0055 <span class="keyword">if</span> ~strcmp(fbasename(end-3:end),<span class="string">'.eeg'</span>) &amp;&amp;  ~strcmp(fbasename(end-3:end),<span class="string">'.lfp'</span>)
+0056     fname = [fbasename <span class="string">'.eeg'</span>];
+0057 <span class="keyword">else</span>
+0058     fname = fbasename;
+0059 <span class="keyword">end</span>
+0060 
+0061 lfp = LoadBinary(fname,<span class="string">'nchannels'</span>,nchannels,<span class="string">'channels'</span>,channels,<span class="string">'duration'</span>,duration,<span class="string">'precision'</span>,precision,<span class="string">'start'</span>,start,<span class="string">'frequency'</span>,frequency);
+0062 t = 10000*[0:length(lfp)-1]/1250;
+0063 
+0064 lfp = tsd(t',lfp);
+0065 
+0066</pre></div>
+<hr><address>Generated on Tue 01-Sep-2015 15:03:35 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
 </body>
 </html>

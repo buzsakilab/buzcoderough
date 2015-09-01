@@ -24,7 +24,7 @@
 <div class="box"><strong>Returns subsets of an intervalSet to which timestamps belong to</strong></div>
 
 <h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
-<div class="box"><strong>function [S,ix] = Start(O,tsa) </strong></div>
+<div class="box"><strong>function [S,ix] = Restrict(O,tsa) </strong></div>
 
 <h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
 <div class="fragment"><pre class="comment">  Returns subsets of an intervalSet to which timestamps belong to
@@ -45,16 +45,16 @@
 <h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
 This function calls:
 <ul style="list-style-image:url(../matlabicon.gif)">
-<li><a href="Restrict.html" class="code" title="function [S,ix] = Start(O,tsa)">Restrict</a>	Returns subsets of an intervalSet to which timestamps belong to</li><li><a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>	Returns the length of each interval in the set</li><li><a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>	Returns subsets of an intervalSet</li></ul>
+<li><a href="Restrict.html" class="code" title="function [S,ix] = Restrict(O,tsa)">Restrict</a>	Returns subsets of an intervalSet to which timestamps belong to</li><li><a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>	Returns the length of each interval in the set</li><li><a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>	Returns subsets of an intervalSet</li></ul>
 This function is called by:
 <ul style="list-style-image:url(../matlabicon.gif)">
-<li><a href="Restrict.html" class="code" title="function [S,ix] = Start(O,tsa)">Restrict</a>	Returns subsets of an intervalSet to which timestamps belong to</li></ul>
+<li><a href="Restrict.html" class="code" title="function [S,ix] = Restrict(O,tsa)">Restrict</a>	Returns subsets of an intervalSet to which timestamps belong to</li></ul>
 <!-- crossreference -->
 
 
 
 <h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
-<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [S,ix] = Start(O,tsa)</a>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [S,ix] = Restrict(O,tsa)</a>
 0002 
 0003 <span class="comment">%  Returns subsets of an intervalSet to which timestamps belong to</span>
 0004 <span class="comment">%</span>
@@ -79,13 +79,13 @@ This function is called by:
 0023 
 0024 <span class="keyword">for</span> i=1:<a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>(st)
 0025 
-0026     r = Range(<a href="Restrict.html" class="code" title="function [S,ix] = Start(O,tsa)">Restrict</a>(tsa,<a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>(O,i)));
+0026     r = Range(<a href="Restrict.html" class="code" title="function [S,ix] = Restrict(O,tsa)">Restrict</a>(tsa,<a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>(O,i)));
 0027     ix = [ix;<a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>(r)&gt;0];
 0028 
 0029 <span class="keyword">end</span>
 0030 
 0031 ix2 = find(ix);
 0032 S = <a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>(O,ix2);</pre></div>
-<hr><address>Generated on Wed 16-Oct-2013 16:05:38 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+<hr><address>Generated on Tue 01-Sep-2015 15:03:35 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
 </body>
 </html>

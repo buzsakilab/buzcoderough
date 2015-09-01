@@ -1,20 +1,23 @@
-function S = Start(O, TimeUnits)
+function SE = StartEnd(O, TimeUnits)
 
-%  Starting times of for each interval in the set
+%  Starting and Ending times of for each interval in the set
 %  
 %  	USAGE:
-%  	S = Start(O, TimeUnits)
+%  	S = StartEnd(O, TimeUnits)
 %  	
 %  	INPUTS: 
 %  	O - an intervalSet object
 %  	TimeUnits (optionnal) - a units object or the abbreviation string
 %  	
 %  	OUTPUT:
-%  	S = an array of starting points for each interval in the set
+%  	SE = an nx2 array of starting and ending points for the n intervals in
+%  	the set.  Column 1 are start points, Column2 are end points
+
 
 % copyright (c) 2004 Francesco P. Battaglia
 % This software is released under the GNU GPL
 % www.gnu.org/copyleft/gpl.html
+
 
   if nargin < 1 | nargin > 2
     error('Call with one or two arguments');
@@ -24,15 +27,9 @@ function S = Start(O, TimeUnits)
     TimeUnits = time_units('ts');
   end  
   
-  S = O.start;
-  
-  if isa(TimeUnits, 'char')
-    TimeUnits = time_units(TimeUnits);
-  end
-  
-  cnvrt = convert(O.units, TimeUnits);
-  
-  if cnvrt ~= 1
-    S = S * cnvrt;
-  end
-  
+
+
+S = Start(O,TimeUnits);
+E = End(O,TimeUnits);
+
+SE = cat(2,S,E);

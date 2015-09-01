@@ -49,7 +49,7 @@
       'UseWindow' - type of window to use for smoothing, defaults to
           hamming. Admissible   values are 'bartlett', 'blackman', 'boxcar',
           'chebwin', 'hamming', 'hann', 'kaiser'
-          'InIntervals', if non-empty, must be a cell array of intervalSet.
+          'InInts', if non-empty, must be a cell array of intervalSet.
           In that case, the tsd is taken to be non-contiguous, 
           and to only assume values in the specified set of IntervalSets</pre></div>
 
@@ -90,7 +90,7 @@ This function is called by:
 0022 <span class="comment">%      'UseWindow' - type of window to use for smoothing, defaults to</span>
 0023 <span class="comment">%          hamming. Admissible   values are 'bartlett', 'blackman', 'boxcar',</span>
 0024 <span class="comment">%          'chebwin', 'hamming', 'hann', 'kaiser'</span>
-0025 <span class="comment">%          'InIntervals', if non-empty, must be a cell array of intervalSet.</span>
+0025 <span class="comment">%          'InInts', if non-empty, must be a cell array of intervalSet.</span>
 0026 <span class="comment">%          In that case, the tsd is taken to be non-contiguous,</span>
 0027 <span class="comment">%          and to only assume values in the specified set of IntervalSets</span>
 0028  
@@ -103,16 +103,16 @@ This function is called by:
 0035   defined_options = dictArray( <span class="keyword">...</span>
 0036   { { <span class="string">'TimeUnits'</span>, {tsa.time_unit, {<span class="string">'char'</span>, <span class="string">'units'</span>} } }, 
 0037     { <span class="string">'UseWindow'</span>, {<span class="string">'hamming'</span>, {<span class="string">'char'</span>} } },  
-0038     {<span class="string">'InIntervals'</span>, { {}, {<span class="string">'cell'</span>} } } 
+0038     {<span class="string">'InInts'</span>, { {}, {<span class="string">'cell'</span>} } } 
 0039     });
 0040   
 0041   getOpt;
 0042   
-0043   <span class="keyword">if</span> ~isempty(InIntervals)
-0044       <span class="keyword">for</span> i = 1:<a href="length.html" class="code" title="function l = length(tsa)">length</a>(InIntervals)
+0043   <span class="keyword">if</span> ~isempty(InInts)
+0044       <span class="keyword">for</span> i = 1:<a href="length.html" class="code" title="function l = length(tsa)">length</a>(InInts)
 0045           2+3;
 0046           
-0047           tsdR{i} = <a href="Restrict.html" class="code" title="function [R, il] = Restrict(tsa, varargin)">Restrict</a>(tsa, InIntervals{i});
+0047           tsdR{i} = <a href="Restrict.html" class="code" title="function [R, il] = Restrict(tsa, varargin)">Restrict</a>(tsa, InInts{i});
 0048           tsdR{i} = <a href="smooth.html" class="code" title="function S = smooth(tsa, l, varargin)">smooth</a>(tsdR{i}, l, <span class="string">'TimeUnits'</span>, TimeUnits, <span class="string">'UseWindow'</span>, UseWindow);
 0049       <span class="keyword">end</span>
 0050       S = <a href="cat.html" class="code" title="function tsdOUT = cat(varargin)">cat</a>(tsdR{:});
@@ -138,6 +138,6 @@ This function is called by:
 0070   v = v / sum(hh);
 0071 
 0072   S = <a href="tsd.html" class="code" title="function tsa = tsd(t, Data, varargin)">tsd</a>(t, v);</pre></div>
-<hr><address>Generated on Wed 16-Oct-2013 16:05:38 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+<hr><address>Generated on Tue 01-Sep-2015 15:03:35 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
 </body>
 </html>
