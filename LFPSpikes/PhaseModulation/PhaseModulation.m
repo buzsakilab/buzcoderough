@@ -203,7 +203,7 @@ switch class(spikes)
             error ('"spikes" input must be either 1D vector of spiketimes, tsdArray or cellarray of 1D vectors')
         else
             S = spikes;
-            spikes = cell{1};
+            spikes = cell(1); % edited by Luke, 2015-08-10
             spikes{1} = S(:)*lfpfreq;
         end
     case 'cell'
