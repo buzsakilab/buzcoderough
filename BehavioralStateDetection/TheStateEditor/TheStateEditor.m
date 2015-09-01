@@ -1,14 +1,14 @@
 %function StateEditorProBeta(baseName, inputData, supressGUI, makePortable)
-% SIMPLE USAGE (NO INPUT VARIABLES):
+% SIMPLE USAGE (NO INPUT VARIABLES, if run from dir with .xml and .eeg/lfp):
 % Add StateEditor to your Matlab path. Within Matlab navigate to a folder
-% containing '.xml' and '.eeg' (or '.lfp') files. Type in the name of this
-% .xml file and press enter (StateEditor will get the relevant baseName from
+% containing '.xml' and '.eeg' (or '.lfp') files. Type in the name of this 
+% .m file and press enter (StateEditor will get the relevant baseName from 
 % the name of the first available '.xml' file in the folder). The StateEditor
-% loading GUI will guide you through channel selection and processing. Once
-% the StateEditor GUI loads, press 'H' for further information on using
+% loading GUI will guide you through channel selection and processing. Once 
+% the TheStateEditor GUI loads, press 'H' for further information on using 
 % StateEditor.
-%
-% THE '.eegstates.mat' FILE: When it firsts runs on a new folder
+% 
+% THE '.eegstates.mat' FILE: When it first runs on a new folder
 % StateEditor creates a 'baseName.eegstates.mat' file. This file contains
 % your channel selection as well as the (whitened) spectrograms. Subsequent
 % runs on this folder will automatically load and use the selections found
@@ -17,38 +17,38 @@
 % rename this file. Note that in order to save space StateEditor does not
 % save the lfp channels selected in the 'eegstates.mat' file unless the
 % 'makePortable' input variable is set to 1.
-%
+% 
 % SAVING AND LOADING STATE EDITOR WORK: Pressing 'S' allows you to save
 % your StateEditor work. The default output file name is:
 % 'baseName-states.mat'. By default this file contains a structure with 3
-% fields:
+% fields: 
 %    'states' - the state vector is of length N, where N is the number
-%               of seconds 	bins in your spectrogram
+%               of seconds	bins in your spectrogram 
 %               (N = round((length(eeg)/eegFS) - 1). It has a value between
-%               0 and 5 for each bin (0 = 'no state', 1 = 'awake', 2 =
+%               0 and 5 for each bin (0 = 'no state', 1 = 'awake', 2 = 
 %               'Light/Drowzy', 3 = 'NREM', 4 = 'Intermediate', 5 = 'REM').
-%   'events' -  a N by 2 matrix where the first column are event#'s (1
-%               through 10) and the 2nd column are the event times in
-%               seconds (in arbitrary precision).
-%   'transitions' - a Nx3 matrix of exact state transition times. 1st
-%                   collumn: state number, 2nd collumn: state start time
-%                   (in seconds), 3rd column: 	end time (in seconds). The
+%   'events' -  a N by 2 matrix where the first column are event#'s (1 
+%               through 10) and the 2nd column are the event times in 
+%               seconds (in arbitrary precision). 
+%   'transitions' - a Nx3 matrix of exact state transition times. 1st 
+%                   collumn: state number, 2nd collumn: state start time 
+%                   (in seconds), 3rd column: 	end time (in seconds). The 
 %                   transition matrix is a higher resolution complement to
 %                   the state vector for those who wish to choose their
-%                   states with a resolution greater than 1Hz. In order to
-%                   load states or events into StateEditor save a structure
+%                   states with a resolution greater than 1Hz. In order to 
+%                   load states or events into StateEditor save a structure 
 %                   formatted as specified above.
-%
+% 
 % LOADING VARIABLES DIRECTLY FROM MATLAB: The structure 'inputData' allows
 % for loading directly from existing matlab variables (NOTE: the details
 % below are only relevant to those that do not have access to .lfp/.eeg
 % files or wish to bypass the StateEditor loading GUI) It must contain the
-% following (case-sensitive) fields:
-%       'rawEeg': this is a cell array of size N where N is the number of
-%               eeg channels to load (maximum of 3). Each cell of 'rawEeg'
+% following (case-sensitive) fields: 
+%       'rawEeg': this is a cell array of size N where N is the number of 
+%               eeg channels to load (maximum of 3). Each cell of 'rawEeg' 
 %               must be a vector 1 eeg channel of length n where n is the
-%               number of samples 'Chs': 1xN matrix of channel numbers
-%               where N is the number of lfp channels to load
+%               number of samples 'Chs': 1xN matrix of channel numbers 
+%               where N is the number of lfp channels to load 
 %               (for instance inputData.Chs = [20, 39])
 %       'eegFS': lfp sampling frequency (default: 1250 Hz)
 %       'Chs': List of channel numbers corresponding to rawEeg
@@ -56,16 +56,15 @@
 %       'MotionType':
 %           Must be one of the following (case-sensitive) strings:
 %           -'none'
-%           -'Whl'
-%           -'Channels (accelerometer)'
-%           -'Channels (MEG)'
+%           -'Whl' 
+%           -'Channels (accelerometer)' 
+%           -'Channels (MEG)' 
 %           -'File'
-%       'motion': a 1xN vector of movement data to be displayed in the
+%       'motion': a 1xN vector of movement data to be displayed in the 
 %           motion panel. N is the number of second bins in the spectrogram
-%           of the lfp channels and has the value:
-%               round((length(rawEeg{1}/eegFS) - 1).
-%
-% NOTE: to use a pre-processed motion signal, set the 'MotionType' to 'none' and
+%           of the lfp channels and has the value: 
+%               round((length(rawEeg{1}/eegFS) - 1). 
+%   NOTE: to use a pre-processed motion signal, set the 'MotionType' to 'none' and
 % pass the actual motion signal in the field 'motion' as described above.
 % Conversely, if you wish to pass a motion signal to be processed (for
 % instance, accelerometer or MEG channel(s), pass these channels in through
@@ -73,18 +72,17 @@
 % the number of motionsignal channels, and n is the number of samples in
 % eegFS samples/second)) and set the 'MotionType' to the desired processing
 % type.
-%
-%
-% SUPRESSING THE GUI LOADER AND THE STATE EDITOR GUI:
-% If you wish to bypass the StateEditor GUI loader use the 'inputData'
-% structure to pass StateEditor the variables: 'Chs' and 'MotionType'. If
-% applicable also  select the motion signal channels through the variable
-% 'mChs'. Note that StateEditor must still be called from the folder in
-% which the relevant '.xml' and '.eeg/.lfp' files are stored. In order to
-% suppress the StateEditor GUI, set the supressGUI variable to 1. This can
-% be useful for those wishing to pre-create the '.eegstates.mat' file as
+% 
+% 
+% SUPRESSING THE GUI LOADER AND THE STATE EDITOR GUI: 
+% If you wish to bypass the StateEditor GUI loader use the 'inputData' 
+% structure to pass StateEditor the variables: 'Chs' and 'MotionType'. If 
+% applicable also  select the motion signal channels through the variable 
+% 'mChs'. Note that StateEditor must still be called from the folder in 
+% which the relevant '.xml' and '.eeg/.lfp' files are stored. In order to 
+% suppress the StateEditor GUI, set the supressGUI variable to 1. This can 
+% be useful for those wishing to pre-create the '.eegstates.mat' file as 
 % part of their data pre-processing.
-%
 %
 %created by Andres Grosmark at Gyuri Buzsaki's lab, 12/2012.
 %Improvements by Brendon Watson
@@ -94,9 +92,7 @@
 
 
 
-
-
-function StateEditor(baseName, inputData, supressGUI, makePortable)
+function TheStateEditor(baseName, inputData, supressGUI, makePortable)
 
 
 %% get baseName if doesn't exist, save
@@ -115,7 +111,7 @@ if exist('Chs', 'var') & exist('rawEeg', 'var') & exist('MotionType', 'var') & ~
 end
 
 if ~exist('eegFS', 'var')
-    eegFS = 1250;
+        eegFS = 1250;
 end
 LoadFromPortable = 0;
 if ~exist('baseName','var')
@@ -213,9 +209,14 @@ if ~(exist('rawEeg', 'var') & exist('Chs', 'var') & exist('nCh', 'var') & exist(
             if FileExistsIn([baseName,'.lfp'])
                 suffix = '.lfp';
             else
-                disp(['Error: ', baseName, '.eeg or .lfp not found.'])
-                disp(['Quitting now. Bye bye.']);
-                return
+%                 try 
+%                     basepath = cd;
+%                     eeglfppath = findsessioneeglfpfile(baseName,basepath);
+%                 catch
+                    disp(['Error: ', baseName, '.eeg or .lfp not found.'])
+                    disp(['Quitting now. Bye bye.']);
+                    return
+%                 end
             end
         end
         
@@ -274,15 +275,14 @@ if FileExistsIn([baseName,'.eegstates.mat'])
     end
 else
     StateInfo = [];
-    
+
     if ~exist('nCh', 'var')
-        
-        info1 = LoadXmlIn([baseName, '.xml']);
-        nCh = info1.nChannels;
-        
+ 
+            info1 = LoadXmlIn([baseName, '.xml']);
+            nCh = info1.nChannels;
+  
     end
     if supressLoadGUI == 0
-        
         
         global answer1
         answer1 = 0;
@@ -343,6 +343,7 @@ else
         
     end
     
+    
     if ~iscell(Chs)
         if sum(Chs > 0 & Chs <= nCh) ~= length(Chs) | isempty(Chs)
             b = msgbox('Error: Incorrect channel selection. Quiting now. Bye bye.');
@@ -350,6 +351,7 @@ else
             return;
         end
     end
+    
     
     if ~exist('rawEeg', 'var')
         weeg = {};
@@ -390,6 +392,7 @@ else
         end
     else
         for i = 1:length(Chs)
+            
             
             if iscell(Chs)
                 disp(['Whitening and computing spectrogram for channel ', Chs{i}, '. This will all be over in a minute.']);
@@ -560,8 +563,9 @@ else
 end
 
 end
-function StateEditorSetup(f, MP, States, eeg, baseName, FO, eegFS)
 
+
+function StateEditorSetup(f, MP, States, eeg, baseName, FO, eegFS)
 
 if ~iscell(f)
     a = f; e = eeg;
@@ -584,9 +588,9 @@ end
 
 
 
-for i = 1:nCh
-    FO.eeg{i} = (eeg{i}(1:FO.downsample:end)/2150)/1000;
-end
+    for i = 1:nCh
+        FO.eeg{i} = (eeg{i}(1:FO.downsample:end)/2150)/1000;
+    end
 
 FO.clickPoint = [];
 FO.startLine = {};
@@ -724,7 +728,7 @@ FO.originalFO = f{1}.fo;
 
 
 for i = 1:nCh
-    FO.spec{i} = log2(convWithIn(spec{i}, hanning(FO.hanningW)));
+    FO.spec{i} = log10(convWithIn(spec{i}, hanning(FO.hanningW)));
 end
 
 
@@ -848,12 +852,12 @@ FO.mMidline = annotation('line', [p(1) + p(3)/2, p(1) + p(3)/2], [p(2), p(2) + p
 
 
 for i = 1:nCh
-    FO.eegX = (1:length(FO.eeg{i}))/(eegFS/FO.downsample);
+    eegX = (1:length(FO.eeg{i}))/(FO.eegFS/FO.downsample);
     FO.eax{i} = axes('Position', position.eax{i});
     
-    FO.Eplot{i} = plot(FO.eegX(FO.eegX >= 0 & FO.eegX <= 120), FO.eeg{i}(FO.eegX >= 0 & FO.eegX <= 120), 'y');
+    FO.Eplot{i} = plot(eegX(eegX >= 0 & eegX <= 120), FO.eeg{i}(eegX >= 0 & eegX <= 120), 'y');
     set(FO.eax{i}, 'Color', [0 0 0], 'XColor', 'b');
-    %   FO.Eplot{i} = plot(FO.eegX, FO.eeg{i});
+    %   FO.Eplot{i} = plot(eegX, FO.eeg{i});
     ylabel('Eeg');
     l1 = [min(get(FO.Eplot{i}, 'YData')), max(get(FO.Eplot{i}, 'YData'))];
     ylim(l1);
@@ -973,8 +977,19 @@ for i = 1:length(nCh)
     a = [a; min(FO.eeg{i}), max(FO.eeg{i})];
 end
 FO.eegYLim = [min(a(:, 1)), max(a(:, 2))];
-guidata(gcf, FO);
 
+
+%% BW speeding things up... didn't change anything above to be safe
+setappdata(gcf,'unsmoothedSpec',FO.unsmoothedSpec)
+setappdata(gcf,'spec',FO.spec)
+setappdata(gcf,'eeg',FO.eeg)
+
+FO = rmfield(FO,'spec');
+FO = rmfield(FO,'unsmoothedSpec');%access only when needed using appdata now
+FO = rmfield(FO,'eeg');%access only when needed using appdata now
+% FO = rmfield(FO,'eegX');%recalculate on the fly using:   eegX = (1:length(FO.eeg{i}))/(FO.eegFS/FO.downsample);
+%%
+guidata(gcf,FO)
 
 
 updateEEG;
@@ -986,6 +1001,8 @@ set(FO.sax{end},'xticklabel',num2str(get(FO.sax{end},'xtick')'));
 
 
 end
+
+
 function DefKey(f, e)
 FO = guidata(gcf);
 
@@ -1245,7 +1262,7 @@ switch e.Key
             ' '...
             '''\bfZ''\rm-- Toggle Zoom ON/OFF',...
             '       Left click zoom in. Right click zoom out. Hold and drag to select zoom area.'...
-            '       Double left click: fast zoom in. Double right click: reset full X extent.'...
+            '       Double left click: fast zoom in. Double right click: reset full X extent.'... 
             ' '...
             '''\bfR''\rm-- Reset X limits to full extent',...
             ' '...
@@ -1266,7 +1283,7 @@ switch e.Key
             '''\bfL''\rm-- Load state vector/events/transitions from file',...
             ' '...
             'Also note the editable fields and lists on the right hand panel!'
-            
+                
             });
         uiwait(helpFig);
         FO = guidata(gcf);
@@ -1279,6 +1296,14 @@ end
 
 function updateEEG(varargin)
 FO = guidata(gcf);
+% try
+    eeg = getappdata(gcf,'eeg');
+    eegX = (1:length(eeg{1}))/(FO.eegFS/FO.downsample);
+% catch
+%     eeg = F0.eeg;
+%     eegX = F0
+% end
+
 if isempty(varargin)
     pos = mean(get(FO.sax{1}, 'XLim'));
 else
@@ -1299,8 +1324,8 @@ end
 lowMargin = low - 60;
 highMargin = high + 60;
 for i = 1:FO.nCh
-    set(FO.Eplot{i}, 'XData', FO.eegX(FO.eegX >= lowMargin & FO.eegX <= highMargin), 'YData', FO.eeg{i}(FO.eegX >= lowMargin & FO.eegX <= highMargin));
-    l1 = [min(FO.eeg{i}(FO.eegX >= low & FO.eegX <= high)), max(FO.eeg{i}(FO.eegX >= low & FO.eegX <= high))];
+    set(FO.Eplot{i}, 'XData', eegX(eegX >= lowMargin & eegX <= highMargin), 'YData', eeg{i}(eegX >= lowMargin & eegX <= highMargin));
+    l1 = [min(eeg{i}(eegX >= low & eegX <= high)), max(eeg{i}(eegX >= low & eegX <= high))];
     set(FO.eax{i}, 'YLim', l1);
     set(FO.eax{i}, 'XLim', [pos - FO.eegShow/2, pos + FO.eegShow/2]);
 end
@@ -1328,9 +1353,9 @@ catch
 end
 
 % for i = 1:FO.nCh
-%     set(FO.Eplot{i}, 'XData', FO.eegX(FO.eegX >= low & FO.eegX <= high));
-%     set(FO.Eplot{i}, 'YData', FO.eeg{i}(FO.eegX >= low & FO.eegX <= high));
-%     l1 = [min(FO.eeg{i}(FO.eegX >= low & FO.eegX <= high)), max(FO.eeg{i}(FO.eegX >= low & FO.eegX <= high))];
+%     set(FO.Eplot{i}, 'XData', eegX(eegX >= low & eegX <= high));
+%     set(FO.Eplot{i}, 'YData', eeg{i}(eegX >= low & eegX <= high));
+%     l1 = [min(eeg{i}(eegX >= low & eegX <= high)), max(eeg{i}(eegX >= low & eegX <= high))];
 %     set(FO.eax{i}, 'YLim', l1);
 %     set(FO.eax{i}, 'XLim', [pos - FO.eegShow/2, pos + FO.eegShow/2]);
 % end
@@ -2099,11 +2124,6 @@ else
     
     states = FO.States;
     events = FO.Events;
-    if ~isempty(FO.TransHistoryTracker)
-        transitions = FO.Transitions(FO.TransHistoryTracker == 1, :);
-    else
-        transitions = [];
-    end
     
     toSave = [' ''states'','];
     if includeEvents == 1
@@ -2111,6 +2131,11 @@ else
     end
     
     if includeEvents == 1
+        if ~isempty(FO.TransHistoryTracker)
+            transitions = FO.Transitions(FO.TransHistoryTracker == 1, :);
+        else
+            transitions = [];
+        end
         toSave = [toSave, ' ''transitions'','];
     end
     
@@ -2195,22 +2220,22 @@ else
         st = 'states';
     end
     
-    if loadStates == 1
+    if loadStates == 1    
         if isfield(newS, st)
-            
+
             if sum(size(FO.States) == size(newS.(st))) ~= 2
                 b = msgbox({'Error: states field must be a 1xN vector file', 'where N == the number of bins.'});
                 uiwait(b);
                 FO = guidata(gcf);
                 return;
             end
-            
+
             FO.States = newS.(st);
             loaded{end + 1} = 'states vector';
         end
     end
     
-    if loadEvents == 1
+    if loadEvents == 1    
         if isfield(newS, 'events')
             events = newS.events;
             if size(events, 2) ~= 2 & ~isempty(events)
@@ -2219,7 +2244,7 @@ else
                 FO = guidata(gcf);
                 return;
             end
-            
+
             FO.Events = events;
             loaded{end + 1} = 'event matrix';
         end
@@ -2264,6 +2289,8 @@ FO = guidata(gcf);
 FO.madeChanges = 0;
 guidata(gcf, FO);
 end
+
+
 function out = convWithIn(sp, win1)
 %function out = convWith(sp, win1) - win1 convtrimmed with collumns of sp
 
@@ -2324,14 +2351,17 @@ end
 set(FO.xlimbox, 'String', int2str(round(diff(get(FO.sax{1}, 'XLim')))));
 guidata(gcf, FO);
 end
+
 function ResizeFreqY(direction)
 FO = guidata(gcf);
+spec = getappdata(gcf,'spec');
+
 if direction == 1
     m = FO.maxFreq + 10;
     if m <= max(FO.fo);
         FO.maxFreq = m;
         for i = 1:FO.nCh
-            set(FO.iSpec{i}, 'CData', FO.spec{i}(:, FO.fo <= m)', 'YData', FO.fo(FO.fo <= m));
+            set(FO.iSpec{i}, 'CData', spec{i}(:, FO.fo <= m)', 'YData', FO.fo(FO.fo <= m));
             set(FO.sax{i}, 'Ylim', [min(FO.fo), m]);
         end
     end
@@ -2340,13 +2370,14 @@ else
     if m >= 10
         FO.maxFreq = m;
         for i = 1:FO.nCh
-            set(FO.iSpec{i}, 'CData', FO.spec{i}(:, FO.fo <= m)', 'YData', FO.fo(FO.fo <= m));
+            set(FO.iSpec{i}, 'CData', spec{i}(:, FO.fo <= m)', 'YData', FO.fo(FO.fo <= m));
             set(FO.sax{i}, 'Ylim', [min(FO.fo), m]);
         end
     end
 end
 guidata(gcf, FO);
 end
+
 function CloseDialog(e, src)
 FO = guidata(gcf);
 if isempty(FO)
@@ -2378,6 +2409,8 @@ end
 end
 function ChangeSmoothingWindow(e, src)
 FO = guidata(gcf);
+spec = getappdata(gcf,'spec');
+unsmoothedSpec = getappdata(gcf,'unsmoothedSpec');
 
 val = get(FO.hanningWDisp, 'Value');
 
@@ -2389,22 +2422,25 @@ else
     FO.hanningW = newW;updateEEG
     if newW == 0
         for i = 1:FO.nCh
-            FO.spec{i} = log2(FO.unsmoothedSpec{i});
+            spec{i} = log10(unsmoothedSpec{i});
         end
     else
         for i = 1:FO.nCh
-            FO.spec{i} =log2(convWithIn(FO.unsmoothedSpec{i}, hanning(FO.hanningW)));
+            spec{i} = log10(convWithIn(unsmoothedSpec{i}, hanning(FO.hanningW)));
         end
     end
     for i = 1:FO.nCh
-        set(FO.iSpec{i}, 'CData', FO.spec{i}(:, FO.fo <= FO.maxFreq)');
+        set(FO.iSpec{i}, 'CData', spec{i}(:, FO.fo <= FO.maxFreq)');
     end
 end
 
+setappdata(gcf,'spec',spec)
 guidata(gcf, FO);
 end
+
 function OverlayDisplay(e, src)
 FO = guidata(gcf);
+unsmoothedSpec = getappdata(gcf,'unsmoothedSpec');
 
 switch get(FO.overlayDisp, 'Value')
     case 1
@@ -2427,7 +2463,7 @@ switch get(FO.overlayDisp, 'Value')
         maxF = FO.maxFreq;
         fo = FO.fo;
         for i = 1:length(FO.sax)
-            m = mean(FO.unsmoothedSpec{i}(:, fo >= 5 & fo <= 10), 2)./mean(FO.unsmoothedSpec{i}(:, fo >= 0.5 & fo <= 4), 2);
+            m = mean(unsmoothedSpec{i}(:, fo >= 5 & fo <= 10), 2)./mean(unsmoothedSpec{i}(:, fo >= 0.5 & fo <= 4), 2);
             if FO.hanningW > 0
                 m = convtrimIn(m, hanning(FO.hanningW));
             end
@@ -2720,8 +2756,6 @@ a = min(a);
 q1 = find(r1{a} == '>', 1, 'first');
 q2 = find(r1{a} == '<', 1, 'last');
 xml.nChannels = str2num(r1{a}((q1 + 1):(q2 - 1)));
-
-
 end
 
 % general recursive parsing will have to wait.
@@ -2873,7 +2907,7 @@ guidata(gcf, FO);
 updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
 FO = guidata(gcf);
 % FO.CurrEventLines{end + 1} = [];
-%
+% 
 % for i = 1:FO.nCh
 %     ax = FO.sax{i};
 %     yl = [0 300];
@@ -2888,7 +2922,7 @@ FO = guidata(gcf);
 %     FO.CurrEventLines{end}{panelN} = plot([location, location], [yl(1), yl(2)], ':m', 'LineWidth', 2);
 %     panelN = panelN + 1;
 % end
-%
+% 
 % ax = FO.max;
 % yl = get(FO.max, 'YLim');
 % axes(ax);
@@ -2910,7 +2944,7 @@ events = FO.Events;
 ind1 = find(events(:, 1) == EN);
 id = dsearchn(events(events(:, 1) == EN, 2), location);
 if (abs(location - events(ind1(id), 2))/diff(x1)) < 0.01;
-    
+   
     events = events((1:size(events, 1)) ~= ind1(id), :);
     FO.Events = events;
     guidata(gcf, FO);
@@ -2991,7 +3025,7 @@ newString = 'none';
 
 events = FO.Events;
 if isempty(events)
-    for i = 1:10
+for i = 1:10
         newString = [newString, '|', int2str(i), ' (0 events)'];
     end
 else
@@ -3034,7 +3068,7 @@ saxLim = diff(get(FO.sax{1}, 'XLim'));
 
 newLims = [nextE - saxLim/2, nextE + saxLim/2];
 if newLims(1) < FO.lims(1)
-    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1));
+    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1)); 
     newLims(1) = FO.lims(1);
 end
 
@@ -3044,7 +3078,7 @@ if newLims(2) > FO.lims(2)
 end
 
 if newLims(1) < FO.lims(1)
-    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1));
+    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1)); 
     newLims(1) = FO.lims(1);
 end
 
@@ -3082,7 +3116,7 @@ saxLim = diff(get(FO.sax{1}, 'XLim'));
 
 newLims = [nextE - saxLim/2, nextE + saxLim/2];
 if newLims(1) < FO.lims(1)
-    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1));
+    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1)); 
     newLims(1) = FO.lims(1);
 end
 
@@ -3092,7 +3126,7 @@ if newLims(2) > FO.lims(2)
 end
 
 if newLims(1) < FO.lims(1)
-    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1));
+    newLims(2) = newLims(2) + (FO.lims(1) - newLims(1)); 
     newLims(1) = FO.lims(1);
 end
 
@@ -3151,7 +3185,7 @@ function [y, f, t, phi, FStats]=mtchglongIn(varargin);
 % NB they are cross-spectra not coherences. If you want coherences use
 % mtcohere
 
-% Original code by Partha Mitra - modified by Ken Harris
+% Original code by Partha Mitra - modified by Ken Harris 
 % and adopted for long files and phase by Anton Sirota
 % Also containing elements from specgram.m
 
@@ -3183,7 +3217,7 @@ for Block=1:nBlocks
     % calculate Slepian sequences.  Tapers is a matrix of size [WinLength, nTapers]
     [Tapers V]=dpss(WinLength,NW,nTapers, 'calc');
     % New super duper vectorized alogirthm
-    % compute tapered periodogram with FFT
+    % compute tapered periodogram with FFT 
     % This involves lots of wrangling with multidimensional arrays.
     
     TaperingArray = repmat(Tapers, [1 1 nChannels]);
@@ -3200,7 +3234,7 @@ for Block=1:nBlocks
         normfac = sqrt(2/nFFT); %to get back rms of original units
         Periodogram(:,:,:,j) = fftOut(select,:,:)*normfac; %fft(TaperedSegments,nFFT);
         % Periodogram: size  = nFreqBins, nTapers, nChannels, nFFTChunks
-    end
+    end	
     if nargout>4
         U0 = repmat(sum(Tapers(:,1:2:end)),[nFreqBins,1,nChannels,   nFFTChunks]);
         Mu = sq(sum(Periodogram(:,1:2:end,:,:) .* conj(U0), 2) ./  sum(abs(U0).^2, 2));
@@ -3223,7 +3257,7 @@ for Block=1:nBlocks
             % for off-diagonal elements copy into bottom half of matrix
             if (Ch1 ~= Ch2)
                 tmpy(:,:, Ch2, Ch1) = conj(eJ) / nTapers;
-            end
+            end            
             
         end
     end
@@ -3241,7 +3275,7 @@ for Block=1:nBlocks
                     ./ (tmpy(:,:,Ch1,Ch1) .* tmpy(:,:,Ch2,Ch2))), [2 1 3 4]);
                 if nargout>3
                     phi(iChunks,:,Ch1,Ch2) = permute(angle(tmpy(:,:,Ch1, Ch2) ...
-                        ./ sqrt(tmpy(:,:,Ch1,Ch1) .* tmpy(:,:,Ch2,Ch2))), [2 1 3 4]);
+                        ./ sqrt(tmpy(:,:,Ch1,Ch1) .* tmpy(:,:,Ch2,Ch2))), [2 1 3 4]); 
                 end
             end
         end
@@ -3258,15 +3292,15 @@ if nargout == 0
     newplot;
     for Ch1=1:nChannels, for Ch2 = 1:nChannels
             subplot(nChannels, nChannels, Ch1 + (Ch2-1)*nChannels);
-            if Ch1==Ch2
-                if length(t)==1
-                    imagesc([0 1/f(2)],f,20*log10(abs(y(:,:,Ch1,Ch2))+eps)');axis xy; colormap(jet);
-                else
-                    imagesc(t,f,20*log10(abs(y(:,:,Ch1,Ch2))+eps)');axis xy; colormap(jet);
-                end
-            else
-                imagesc(t,f,(abs(y(:,:,Ch1,Ch2)))');axis xy; colormap(jet);
-            end
+	    if Ch1==Ch2
+		if length(t)==1
+			imagesc([0 1/f(2)],f,20*log10(abs(y(:,:,Ch1,Ch2))+eps)');axis xy; colormap(jet);
+		else
+			imagesc(t,f,20*log10(abs(y(:,:,Ch1,Ch2))+eps)');axis xy; colormap(jet);
+		end
+	    else
+	    	imagesc(t,f,(abs(y(:,:,Ch1,Ch2)))');axis xy; colormap(jet);
+	    end
         end; end;
     xlabel('Time')
     ylabel('Frequency')
@@ -3296,7 +3330,7 @@ end
 %                   (default = 0)
 %    =========================================================================
 
-% Copyright (C) 2004-2006 by Michaël Zugaro
+% Copyright (C) 2004-2006 by Micha�l Zugaro
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -3315,66 +3349,66 @@ frequency = 20000;
 channels = 1;
 
 if nargin < 1 | mod(length(varargin),2) ~= 0,
-    error('Incorrect number of parameters (type ''help LoadBinary'' for details).');
+  error('Incorrect number of parameters (type ''help LoadBinary'' for details).');
 end
 
 % Parse options
 for i = 1:2:length(varargin),
-    if ~isa(varargin{i},'char'),
-        error(['Parameter ' num2str(i+3) ' is not a property (type ''help LoadBinary'' for details).']);
-    end
-    switch(lower(varargin{i})),
-        case 'duration',
-            duration = varargin{i+1};
-            if ~isa(duration,'numeric') | length(duration) ~= 1 | duration < 0,
-                error('Incorrect value for property ''duration'' (type ''help LoadBinary'' for details).');
-            end
-        case 'frequency',
-            frequency = varargin{i+1};
-            if ~isa(frequency,'numeric') | length(frequency) ~= 1 | frequency <= 0,
-                error('Incorrect value for property ''frequency'' (type ''help LoadBinary'' for details).');
-            end
-        case 'start',
-            start = varargin{i+1};
-            if ~isa(start,'numeric') | length(start) ~= 1,
-                error('Incorrect value for property ''start'' (type ''help LoadBinary'' for details).');
-            end
-            if start < 0, start = 0; end
-        case 'nchannels',
-            nChannels = varargin{i+1};
-            if ~((round(channels) == channels & channels > 0)) | length(nChannels) ~= 1,
-                error('Incorrect value for property ''nChannels'' (type ''help LoadBinary'' for details).');
-            end
-        case 'channels',
-            channels = varargin{i+1};
-            if ~(round(channels) == channels & channels > 0)
-                error('Incorrect value for property ''channels'' (type ''help LoadBinary'' for details).');
-            end
-        case 'precision',
-            precision = varargin{i+1};
-            if ~isa(precision,'char'),
-                error('Incorrect value for property ''precision'' (type ''help LoadBinary'' for details).');
-            end
-        case 'skip',
-            skip = varargin{i+1};
-            if ~IsPositiveInteger(skip) | length(skip) ~= 1,
-                error('Incorrect value for property ''skip'' (type ''help LoadBinary'' for details).');
-            end
-        otherwise,
-            error(['Unknown property ''' num2str(varargin{i}) ''' (type ''help LoadBinary'' for details).']);
-    end
+  if ~isa(varargin{i},'char'),
+    error(['Parameter ' num2str(i+3) ' is not a property (type ''help LoadBinary'' for details).']);
+  end
+  switch(lower(varargin{i})),
+    case 'duration',
+      duration = varargin{i+1};
+      if ~isa(duration,'numeric') | length(duration) ~= 1 | duration < 0,
+        error('Incorrect value for property ''duration'' (type ''help LoadBinary'' for details).');
+      end
+    case 'frequency',
+      frequency = varargin{i+1};
+      if ~isa(frequency,'numeric') | length(frequency) ~= 1 | frequency <= 0,
+        error('Incorrect value for property ''frequency'' (type ''help LoadBinary'' for details).');
+      end
+    case 'start',
+      start = varargin{i+1};
+      if ~isa(start,'numeric') | length(start) ~= 1,
+        error('Incorrect value for property ''start'' (type ''help LoadBinary'' for details).');
+      end
+		if start < 0, start = 0; end
+    case 'nchannels',
+      nChannels = varargin{i+1};
+      if ~((round(channels) == channels & channels > 0)) | length(nChannels) ~= 1,
+        error('Incorrect value for property ''nChannels'' (type ''help LoadBinary'' for details).');
+      end
+    case 'channels',
+      channels = varargin{i+1};
+      if ~(round(channels) == channels & channels > 0)
+        error('Incorrect value for property ''channels'' (type ''help LoadBinary'' for details).');
+      end
+    case 'precision',
+      precision = varargin{i+1};
+      if ~isa(precision,'char'),
+        error('Incorrect value for property ''precision'' (type ''help LoadBinary'' for details).');
+      end
+    case 'skip',
+      skip = varargin{i+1};
+      if ~IsPositiveInteger(skip) | length(skip) ~= 1,
+        error('Incorrect value for property ''skip'' (type ''help LoadBinary'' for details).');
+      end
+    otherwise,
+      error(['Unknown property ''' num2str(varargin{i}) ''' (type ''help LoadBinary'' for details).']);
+  end
 end
 
 sizeInBytes = 0;
 switch precision,
-    case {'uchar','unsigned char','schar','signed char','int8','integer*1','uint8','integer*1'},
-        sizeInBytes = 1;
-    case {'int16','integer*2','uint16','integer*2'},
-        sizeInBytes = 2;
-    case {'int32','integer*4','uint32','integer*4','single','real*4','float32','real*4'},
-        sizeInBytes = 4;
-    case {'int64','integer*8','uint64','integer*8','double','real*8','float64','real*8'},
-        sizeInBytes = 8;
+	case {'uchar','unsigned char','schar','signed char','int8','integer*1','uint8','integer*1'},
+		sizeInBytes = 1;
+	case {'int16','integer*2','uint16','integer*2'},
+		sizeInBytes = 2;
+	case {'int32','integer*4','uint32','integer*4','single','real*4','float32','real*4'},
+		sizeInBytes = 4;
+	case {'int64','integer*8','uint64','integer*8','double','real*8','float64','real*8'},
+		sizeInBytes = 8;
 end
 
 f = fopen(filename,'r');
@@ -3389,21 +3423,21 @@ end
 
 % Determine number of samples when duration is 'inf'
 if isinf(duration),
-    fileStart = ftell(f);
-    status = fseek(f,0,'eof');
-    if status ~= 0,
-        fclose(f);
-        error('Error reading the data file (possible reasons include trying to read past the end of the file).');
-    end
-    fileStop = ftell(f);
-    nSamplesPerChannel = (fileStop-fileStart)/nChannels/sizeInBytes;
-    duration = nSamplesPerChannel/frequency;
-    frewind(f);
-    status = fseek(f,start,'bof');
-    if status ~= 0,
-        fclose(f);
-        error('Could not start reading (possible reasons include trying to read past the end of the file).');
-    end
+	fileStart = ftell(f);
+	status = fseek(f,0,'eof');
+	if status ~= 0,
+		fclose(f);
+		error('Error reading the data file (possible reasons include trying to read past the end of the file).');
+	end
+	fileStop = ftell(f);
+	nSamplesPerChannel = (fileStop-fileStart)/nChannels/sizeInBytes;
+	duration = nSamplesPerChannel/frequency;
+	frewind(f);
+	status = fseek(f,start,'bof');
+	if status ~= 0,
+		fclose(f);
+		error('Could not start reading (possible reasons include trying to read past the end of the file).');
+	end
 else
     nSamplesPerChannel = floor(frequency*duration);
     if nSamplesPerChannel ~= frequency*duration,
@@ -3417,32 +3451,32 @@ end
 maxSamplesPerChunk = 100000;
 nSamples = nChannels*nSamplesPerChannel;
 if nSamples > maxSamplesPerChunk,
-    % Determine chunk duration and number of chunks
-    nSamplesPerChunk = floor(maxSamplesPerChunk/nChannels)*nChannels;
-    durationPerChunk = nSamplesPerChunk/frequency/nChannels;
-    nChunks = floor(duration/durationPerChunk);
-    % Preallocate memory
-    data = zeros(nSamplesPerChannel,length(channels),precision);
-    % Read all chunks
-    i = 1;
-    for j = 1:nChunks,
-        d = LoadBinaryChunkIn(f,'frequency',frequency,'nChannels',nChannels,'channels',channels,'duration',durationPerChunk,'skip',skip);
-        [m,n] = size(d);
-        if m == 0, break; end
-        data(i:i+m-1,:) = d;
-        i = i+m;
-        %  		h=waitbar(j/nChunks);
-    end
-    %  	close(h)
-    % If the data size is not a multiple of the chunk size, read the remainder
-    remainder = duration - nChunks*durationPerChunk;
-    if remainder ~= 0,
-        d = LoadBinaryChunkIn(f,'frequency',frequency,'nChannels',nChannels,'channels',channels,'duration',remainder,'skip',skip);
-        [m,n] = size(d);
-        if m ~= 0,
-            data(i:i+m-1,:) = d;
-        end
-    end
+	% Determine chunk duration and number of chunks
+	nSamplesPerChunk = floor(maxSamplesPerChunk/nChannels)*nChannels;
+	durationPerChunk = nSamplesPerChunk/frequency/nChannels;
+	nChunks = floor(duration/durationPerChunk);
+	% Preallocate memory
+	data = zeros(nSamplesPerChannel,length(channels),precision);
+	% Read all chunks
+	i = 1;
+	for j = 1:nChunks,
+		d = LoadBinaryChunkIn(f,'frequency',frequency,'nChannels',nChannels,'channels',channels,'duration',durationPerChunk,'skip',skip);
+		[m,n] = size(d);
+		if m == 0, break; end
+		data(i:i+m-1,:) = d;
+		i = i+m;
+%  		h=waitbar(j/nChunks);
+	end
+%  	close(h)
+	% If the data size is not a multiple of the chunk size, read the remainder
+	remainder = duration - nChunks*durationPerChunk;
+	if remainder ~= 0,
+		d = LoadBinaryChunkIn(f,'frequency',frequency,'nChannels',nChannels,'channels',channels,'duration',remainder,'skip',skip);
+		[m,n] = size(d);
+		if m ~= 0,
+			data(i:i+m-1,:) = d;
+		end
+	end
 else
     if skip ~= 0,
         data = fread(f,[nChannels frequency*duration],precision,skip);
@@ -3490,8 +3524,8 @@ else
     winstep = 0;
     nOverlap = nOverlap(nOverlap>WinLength/2 & nOverlap<nSamples-WinLength/2);
     nFFTChunks = length(nOverlap);
-    t = nOverlap(:)/Fs;
-end
+    t = nOverlap(:)/Fs; 
+end 
 %here is how welch.m of matlab does it:
 % LminusOverlap = L-noverlap;
 % xStart = 1:LminusOverlap:k*LminusOverlap;
@@ -3502,30 +3536,30 @@ end
 
 % set up f and t arrays
 if isreal(x)%~any(any(imag(x)))    % x purely real
-    if rem(nFFT,2),    % nfft odd
-        select = [1:(nFFT+1)/2];
-    else
-        select = [1:nFFT/2+1];
-    end
-    nFreqBins = length(select);
+	if rem(nFFT,2),    % nfft odd
+		select = [1:(nFFT+1)/2];
+	else
+		select = [1:nFFT/2+1];
+	end
+	nFreqBins = length(select);
 else
-    select = 1:nFFT;
+	select = 1:nFFT;
 end
 f = (select - 1)'*Fs/nFFT;
 nFreqRanges = size(FreqRange,1);
 %if (FreqRange(end)<Fs/2)
-if nFreqRanges==1
-    select = find(f>FreqRange(1) & f<FreqRange(end));
-    f = f(select);
-    nFreqBins = length(select);
-else
-    select=[];
-    for i=1:nFreqRanges
-        select=cat(1,select,find(f>FreqRange(i,1) & f<FreqRange(i,2)));
+    if nFreqRanges==1
+        select = find(f>FreqRange(1) & f<FreqRange(end));
+        f = f(select);
+        nFreqBins = length(select);
+    else
+        select=[];
+        for i=1:nFreqRanges
+            select=cat(1,select,find(f>FreqRange(i,1) & f<FreqRange(i,2)));
+        end
+        f = f(select);
+        nFreqBins = length(select);
     end
-    f = f(select);
-    nFreqBins = length(select);
-end
 %end
 end
 
@@ -3549,7 +3583,7 @@ end
 %     'precision'   sample precision (default = 'int16')
 %    =========================================================================
 
-% Copyright (C) 2004-2006 by Michaël Zugaro
+% Copyright (C) 2004-2006 by Micha�l Zugaro
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -3568,89 +3602,89 @@ frequency = 20000;
 channels = [];
 
 if nargin < 1 | mod(length(varargin),2) ~= 0,
-    error('Incorrect number of parameters (type ''help LoadBinaryChunk'' for details).');
+  error('Incorrect number of parameters (type ''help LoadBinaryChunk'' for details).');
 end
 
 % Parse options
 for i = 1:2:length(varargin),
-    if ~isa(varargin{i},'char'),
-        error(['Parameter ' num2str(i+3) ' is not a property (type ''help LoadBinaryChunk'' for details).']);
-    end
-    switch(lower(varargin{i})),
-        case 'duration',
-            duration = varargin{i+1};
-            if ~isa(duration,'numeric') | length(duration) ~= 1 | duration < 0,
-                error('Incorrect value for property ''duration'' (type ''help LoadBinaryChunk'' for details).');
-            end
-        case 'frequency',
-            frequency = varargin{i+1};
-            if ~isa(frequency,'numeric') | length(frequency) ~= 1 | frequency <= 0,
-                error('Incorrect value for property ''frequency'' (type ''help LoadBinaryChunk'' for details).');
-            end
-        case 'start',
-            start = varargin{i+1};
-            fromCurrentIndex = false;
-            if ~isa(start,'numeric') | length(start) ~= 1,
-                error('Incorrect value for property ''start'' (type ''help LoadBinaryChunk'' for details).');
-            end
-            if start < 0, start = 0; end
-        case 'nchannels',
-            nChannels = varargin{i+1};
-            if ~isa(nChannels,'numeric') | length(nChannels) ~= 1,
-                error('Incorrect value for property ''nChannels'' (type ''help LoadBinaryChunk'' for details).');
-            end
-        case 'channels',
-            channels = varargin{i+1};
-            if ~isa(channels,'numeric'),
-                error('Incorrect value for property ''channels'' (type ''help LoadBinaryChunk'' for details).');
-            end
-        case 'precision',
-            precision = varargin{i+1};
-            if ~isa(precision,'char'),
-                error('Incorrect value for property ''precision'' (type ''help LoadBinaryChunk'' for details).');
-            end
-        case 'skip',
-            skip = varargin{i+1};
-            if ~isa(skip,'numeric') | length(skip) ~= 1,
-                error('Incorrect value for property ''skip'' (type ''help LoadBinaryChunk'' for details).');
-            end
-        otherwise,
-            error(['Unknown property ''' num2str(varargin{i}) ''' (type ''help LoadBinaryChunk'' for details).']);
-    end
+  if ~isa(varargin{i},'char'),
+    error(['Parameter ' num2str(i+3) ' is not a property (type ''help LoadBinaryChunk'' for details).']);
+  end
+  switch(lower(varargin{i})),
+    case 'duration',
+      duration = varargin{i+1};
+      if ~isa(duration,'numeric') | length(duration) ~= 1 | duration < 0,
+        error('Incorrect value for property ''duration'' (type ''help LoadBinaryChunk'' for details).');
+      end
+    case 'frequency',
+      frequency = varargin{i+1};
+      if ~isa(frequency,'numeric') | length(frequency) ~= 1 | frequency <= 0,
+        error('Incorrect value for property ''frequency'' (type ''help LoadBinaryChunk'' for details).');
+      end
+    case 'start',
+      start = varargin{i+1};
+      fromCurrentIndex = false;
+      if ~isa(start,'numeric') | length(start) ~= 1,
+        error('Incorrect value for property ''start'' (type ''help LoadBinaryChunk'' for details).');
+      end
+		if start < 0, start = 0; end
+    case 'nchannels',
+      nChannels = varargin{i+1};
+      if ~isa(nChannels,'numeric') | length(nChannels) ~= 1,
+        error('Incorrect value for property ''nChannels'' (type ''help LoadBinaryChunk'' for details).');
+      end
+    case 'channels',
+      channels = varargin{i+1};
+      if ~isa(channels,'numeric'),
+        error('Incorrect value for property ''channels'' (type ''help LoadBinaryChunk'' for details).');
+      end
+    case 'precision',
+      precision = varargin{i+1};
+      if ~isa(precision,'char'),
+        error('Incorrect value for property ''precision'' (type ''help LoadBinaryChunk'' for details).');
+      end
+    case 'skip',
+      skip = varargin{i+1};
+      if ~isa(skip,'numeric') | length(skip) ~= 1,
+        error('Incorrect value for property ''skip'' (type ''help LoadBinaryChunk'' for details).');
+      end
+    otherwise,
+      error(['Unknown property ''' num2str(varargin{i}) ''' (type ''help LoadBinaryChunk'' for details).']);
+  end
 end
 
 sizeInBytes = 0;
 switch precision,
-    case {'uchar','unsigned char','schar','signed char','int8','integer*1','uint8','integer*1'},
-        sizeInBytes = 1;
-    case {'int16','integer*2','uint16','integer*2'},
-        sizeInBytes = 2;
-    case {'int32','integer*4','uint32','integer*4','single','real*4','float32','real*4'},
-        sizeInBytes = 4;
-    case {'int64','integer*8','uint64','integer*8','double','real*8','float64','real*8'},
-        sizeInBytes = 8;
+	case {'uchar','unsigned char','schar','signed char','int8','integer*1','uint8','integer*1'},
+		sizeInBytes = 1;
+	case {'int16','integer*2','uint16','integer*2'},
+		sizeInBytes = 2;
+	case {'int32','integer*4','uint32','integer*4','single','real*4','float32','real*4'},
+		sizeInBytes = 4;
+	case {'int64','integer*8','uint64','integer*8','double','real*8','float64','real*8'},
+		sizeInBytes = 8;
 end
 
 % Position file index for reading
 if ~fromCurrentIndex,
-    start = floor(start*frequency)*nChannels*sizeInBytes;
-    status = fseek(fid,start,'bof');
-    if status ~= 0,
-        error('Could not start reading (possible reasons include trying to read a closed file or past the end of the file).');
-    end
+	start = floor(start*frequency)*nChannels*sizeInBytes;
+	status = fseek(fid,start,'bof');
+	if status ~= 0,
+		error('Could not start reading (possible reasons include trying to read a closed file or past the end of the file).');
+	end
 end
 
 % Read data chunck
 if skip ~= 0,
-    data = fread(fid,[nChannels frequency*duration],precision,skip);
+	data = fread(fid,[nChannels frequency*duration],precision,skip);
 else
-    data = fread(fid,[nChannels frequency*duration],precision);
+	data = fread(fid,[nChannels frequency*duration],precision);
 end;
 data=data';
 
 % Keep only required channels
 if ~isempty(channels) & ~isempty(data),
-    data = data(:,channels);
+	data = data(:,channels);
 end
 
 end
@@ -3677,17 +3711,17 @@ else
     seg = repmat([1 window],nwin,1)+repmat([0:nwin-1]'*window,1,2);
     if nwin*window>nT
         seg(end,2) =nT;
-    end
+    end   
 end
 
 for j=1:nwin
-    if ~isempty(ARmodel)
+    if ~isempty(ARmodel) 
         A = ARmodel;
         for i=1:nCh
             y(seg(j,1):seg(j,2),i) = Filter0In(A, x(seg(j,1):seg(j,2),i));
         end
     else
-        if CommonAR % meaning common model for all channels and segments!!!
+        if CommonAR % meaning common model for all channels and segments!!! 
             for i=1:nCh
                 if  j==1 & i==1
                     switch artype
@@ -3726,13 +3760,13 @@ end
 function varargout = DefaultArgsIn(Args, DefArgs)
 % auxillary function to replace argument check in the beginning and def. args assigment
 % sets the absent or empty values of the Args (cell array, usually varargin)
-% to their default values from the cell array DefArgs.
+% to their default values from the cell array DefArgs. 
 % Output should contain the actuall names of arguments that you use in the function
 
 % e.g. : in function MyFunction(somearguments , varargin)
 % calling [SampleRate, BinSize] = DefaultArgs(varargin, {20000, 20});
 % will assign the defualt values to SampleRate and BinSize arguments if they
-% are empty or absent in the varargin cell list
+% are empty or absent in the varargin cell list 
 % (not passed to a function or passed empty)
 if isempty(Args)
     Args ={[]};
@@ -3753,7 +3787,7 @@ for i=1:nDefArgs
     
     if (i>nInArgs | isempty(Args{i}))
         varargout(i) = {DefArgs{i}};
-    else
+    else 
         varargout(i) = {Args{i}};
     end
 end
@@ -3785,19 +3819,19 @@ function [w, A, C, sbc, fpe, th]=arfitIn(v, pmin, pmax, selector, no_const)
 %  The matrix th contains information needed for the computation of
 %  confidence intervals. ARMODE and ARCONF require th as input
 %  arguments.
-%
+%       
 %  If the optional argument SELECTOR is included in the function call,
 %  as in ARFIT(v,pmin,pmax,SELECTOR), SELECTOR is used as the order
 %  selection criterion in determining the optimum model order. The
 %  three letter string SELECTOR must have one of the two values 'sbc'
 %  or 'fpe'. (By default, Schwarz's criterion SBC is used.) If the
 %  bounds pmin and pmax coincide, the order of the estimated model
-%  is p=pmin=pmax.
+%  is p=pmin=pmax. 
 %
 %  If the function call contains the optional argument 'zero' as the
 %  fourth or fifth argument, a model of the form
 %
-%         v(k,:)' = A1*v(k-1,:)' +...+ Ap*v(k-p,:)' + noise(C)
+%         v(k,:)' = A1*v(k-1,:)' +...+ Ap*v(k-p,:)' + noise(C) 
 %
 %  is fitted to the time series data. That is, the intercept vector w
 %  is taken to be zero, which amounts to assuming that the AR(p)
@@ -3810,111 +3844,111 @@ function [w, A, C, sbc, fpe, th]=arfitIn(v, pmin, pmax, selector, no_const)
 %           Arnold Neumaier
 %           neum@cma.univie.ac.at
 
-% n: number of observations; m: dimension of state vectors
-[n,m]   = size(v);
+  % n: number of observations; m: dimension of state vectors
+  [n,m]   = size(v);     
 
-if (pmin ~= round(pmin) | pmax ~= round(pmax))
+  if (pmin ~= round(pmin) | pmax ~= round(pmax))
     error('Order must be integer.');
-end
-if (pmax < pmin)
+  end
+  if (pmax < pmin)
     error('PMAX must be greater than or equal to PMIN.')
-end
+  end
 
-% set defaults and check for optional arguments
-if (nargin == 3)              % no optional arguments => set default values
+  % set defaults and check for optional arguments
+  if (nargin == 3)              % no optional arguments => set default values
     mcor       = 1;               % fit intercept vector
     selector   = 'sbc';	          % use SBC as order selection criterion
-elseif (nargin == 4)          % one optional argument
+  elseif (nargin == 4)          % one optional argument
     if strcmp(selector, 'zero')
-        mcor     = 0;               % no intercept vector to be fitted
-        selector = 'sbc';	          % default order selection
+      mcor     = 0;               % no intercept vector to be fitted
+      selector = 'sbc';	          % default order selection 
     else
-        mcor     = 1; 		  % fit intercept vector
+      mcor     = 1; 		  % fit intercept vector
     end
-elseif (nargin == 5)          % two optional arguments
+  elseif (nargin == 5)          % two optional arguments
     if strcmp(no_const, 'zero')
-        mcor     = 0;               % no intercept vector to be fitted
+      mcor     = 0;               % no intercept vector to be fitted
     else
-        error(['Bad argument. Usage: ', ...
-            '[w,A,C,SBC,FPE,th]=AR(v,pmin,pmax,SELECTOR,''zero'')'])
+      error(['Bad argument. Usage: ', ...
+	     '[w,A,C,SBC,FPE,th]=AR(v,pmin,pmax,SELECTOR,''zero'')'])
     end
-end
+  end
 
-ne  	= n-pmax;               % number of block equations of size m
-npmax	= m*pmax+mcor;          % maximum number of parameter vectors of length m
+  ne  	= n-pmax;               % number of block equations of size m
+  npmax	= m*pmax+mcor;          % maximum number of parameter vectors of length m
 
-if (ne <= npmax)
+  if (ne <= npmax)
     error('Time series too short.')
-end
+  end
 
-% compute QR factorization for model of order pmax
-[R, scale]   = arqrIn(v, pmax, mcor);
+  % compute QR factorization for model of order pmax
+  [R, scale]   = arqrIn(v, pmax, mcor);
 
-% compute approximate order selection criteria for models
-% of order pmin:pmax
-[sbc, fpe]   = arordIn(R, m, mcor, ne, pmin, pmax);
+  % compute approximate order selection criteria for models 
+  % of order pmin:pmax
+  [sbc, fpe]   = arordIn(R, m, mcor, ne, pmin, pmax);
 
-% get index iopt of order that minimizes the order selection
-% criterion specified by the variable selector
-[val, iopt]  = min(eval(selector));
+  % get index iopt of order that minimizes the order selection 
+  % criterion specified by the variable selector
+  [val, iopt]  = min(eval(selector)); 
 
-% select order of model
-popt         = pmin + iopt-1; % estimated optimum order
-np           = m*popt + mcor; % number of parameter vectors of length m
+  % select order of model
+  popt         = pmin + iopt-1; % estimated optimum order 
+  np           = m*popt + mcor; % number of parameter vectors of length m
 
-% decompose R for the optimal model order popt according to
-%
-%   | R11  R12 |
-% R=|          |
-%   | 0    R22 |
-%
-R11   = R(1:np, 1:np);
-R12   = R(1:np, npmax+1:npmax+m);
-R22   = R(np+1:npmax+m, npmax+1:npmax+m);
+  % decompose R for the optimal model order popt according to 
+  %
+  %   | R11  R12 |
+  % R=|          |
+  %   | 0    R22 |
+  %
+  R11   = R(1:np, 1:np);
+  R12   = R(1:np, npmax+1:npmax+m);    
+  R22   = R(np+1:npmax+m, npmax+1:npmax+m);
 
-% get augmented parameter matrix Aaug=[w A] if mcor=1 and Aaug=A if mcor=0
-if (np > 0)
+  % get augmented parameter matrix Aaug=[w A] if mcor=1 and Aaug=A if mcor=0
+  if (np > 0)   
     if (mcor == 1)
-        % improve condition of R11 by re-scaling first column
-        con 	= max(scale(2:npmax+m)) / scale(1);
-        R11(:,1)	= R11(:,1)*con;
+      % improve condition of R11 by re-scaling first column
+      con 	= max(scale(2:npmax+m)) / scale(1); 
+      R11(:,1)	= R11(:,1)*con; 
     end;
     Aaug = (R11\R12)';
     
     %  return coefficient matrix A and intercept vector w separately
     if (mcor == 1)
-        % intercept vector w is first column of Aaug, rest of Aaug is
-        % coefficient matrix A
-        w = Aaug(:,1)*con;        % undo condition-improving scaling
-        A = Aaug(:,2:np);
+      % intercept vector w is first column of Aaug, rest of Aaug is 
+      % coefficient matrix A
+      w = Aaug(:,1)*con;        % undo condition-improving scaling
+      A = Aaug(:,2:np);
     else
-        % return an intercept vector of zeros
-        w = zeros(m,1);
-        A = Aaug;
+      % return an intercept vector of zeros 
+      w = zeros(m,1);
+      A = Aaug;
     end
-else
-    % no parameters have been estimated
-    % => return only covariance matrix estimate and order selection
-    % criteria for ``zeroth order model''
+  else
+    % no parameters have been estimated 
+    % => return only covariance matrix estimate and order selection 
+    % criteria for ``zeroth order model''  
     w   = zeros(m,1);
     A   = [];
-end
-
-% return covariance matrix
-dof   = ne-np;                % number of block degrees of freedom
-C     = R22'*R22./dof;        % bias-corrected estimate of covariance matrix
-
-% for later computation of confidence intervals return in th:
-% (i)  the inverse of U=R11'*R11, which appears in the asymptotic
-%      covariance matrix of the least squares estimator
-% (ii) the number of degrees of freedom of the residual covariance matrix
-invR11 = inv(R11);
-if (mcor == 1)
+  end
+  
+  % return covariance matrix
+  dof   = ne-np;                % number of block degrees of freedom
+  C     = R22'*R22./dof;        % bias-corrected estimate of covariance matrix
+  
+  % for later computation of confidence intervals return in th: 
+  % (i)  the inverse of U=R11'*R11, which appears in the asymptotic 
+  %      covariance matrix of the least squares estimator
+  % (ii) the number of degrees of freedom of the residual covariance matrix 
+  invR11 = inv(R11);
+  if (mcor == 1)
     % undo condition improving scaling
     invR11(1, :) = invR11(1, :) * con;
-end
-Uinv   = invR11*invR11';
-th     = [dof zeros(1,size(Uinv,2)-1); Uinv];
+  end
+  Uinv   = invR11*invR11';
+  th     = [dof zeros(1,size(Uinv,2)-1); Uinv];
 end
 
 function [R, scale]=arqrIn(v, p, mcor)
@@ -3928,7 +3962,7 @@ function [R, scale]=arqrIn(v, p, mcor)
 %  appearing in the QR factorization of the AR model, and SCALE is a
 %  vector of scaling factors used to regularize the QR factorization.
 %
-%  ARQR is called by ARFIT.
+%  ARQR is called by ARFIT. 
 %
 %  See also ARFIT.
 
@@ -3936,41 +3970,57 @@ function [R, scale]=arqrIn(v, p, mcor)
 %  Author: Tapio Schneider
 %          tapio@gps.caltech.edu
 
-% n: number of time steps; m: dimension of state vectors
-[n,m] = size(v);
+  % n: number of time steps; m: dimension of state vectors
+  [n,m] = size(v);     
 
-ne    = n-p;                  % number of block equations of size m
-np    = m*p+mcor;             % number of parameter vectors of size m
+  ne    = n-p;                  % number of block equations of size m
+  np    = m*p+mcor;             % number of parameter vectors of size m
 
-% If the intercept vector w is to be fitted, least squares (LS)
-% estimation proceeds by solving the normal equations for the linear
-% regression model
-%
-%                  v(k,:)' = Aaug*u(k,:)' + noise(C)
-%
-% with Aaug=[w A] and `predictors'
-%
-%              u(k,:) = [1 v(k-1,:) ...  v(k-p,:)].
-%
-% If the process mean is taken to be zero, the augmented coefficient
-% matrix is Aaug=A, and the regression model
-%
-%                u(k,:) = [v(k-1,:) ...  v(k-p,:)]
-%
-% is fitted.
-% The number np is the dimension of the `predictors' u(k).
+  % If the intercept vector w is to be fitted, least squares (LS)
+  % estimation proceeds by solving the normal equations for the linear
+  % regression model
+  %
+  %                  v(k,:)' = Aaug*u(k,:)' + noise(C)
+  %
+  % with Aaug=[w A] and `predictors' 
+  %
+  %              u(k,:) = [1 v(k-1,:) ...  v(k-p,:)]. 
+  %
+  % If the process mean is taken to be zero, the augmented coefficient
+  % matrix is Aaug=A, and the regression model
+  %
+  %                u(k,:) = [v(k-1,:) ...  v(k-p,:)]
+  %
+  % is fitted. 
+  % The number np is the dimension of the `predictors' u(k). 
 
-% Assemble the data matrix K (of which a QR factorization will be computed)
-K = zeros(ne,np+m);                 % initialize K
-if (mcor == 1)
+  % Assemble the data matrix K (of which a QR factorization will be computed)
+  K = zeros(ne,np+m);                 % initialize K
+  if (mcor == 1)
     % first column of K consists of ones for estimation of intercept vector w
     K(:,1) = ones(ne,1);
-end
-
-% Assemble `predictors' u in K
-for j=1:p
+  end
+  
+  % Assemble `predictors' u in K 
+  for j=1:p
     K(:, mcor+m*(j-1)+1:mcor+m*j) = [v(p-j+1:n-j, :)];
-end
+  end
+  % Add `observations' v (left hand side of regression model) to K
+  K(:,np+1:np+m) = [v(p+1:n, :)];
+  
+  % Compute regularized QR factorization of K: The regularization
+  % parameter delta is chosen according to Higham's (1996) Theorem
+  % 10.7 on the stability of a Cholesky factorization. Replace the
+  % regularization parameter delta below by a parameter that depends
+  % on the observational error if the observational error dominates
+  % the rounding error (cf. Neumaier, A. and T. Schneider, 2001:
+  % "Estimation of parameters and eigenmodes of multivariate
+  % autoregressive models", ACM Trans. Math. Softw., 27, 27--57.).
+  q     = np + m;             % number of columns of K
+  delta = (q^2 + q + 1)*eps;  % Higham's choice for a Cholesky factorization
+  scale = sqrt(delta)*sqrt(sum(K.^2));   
+  R     = triu(qr([K; diag(scale)]));
+
 % Add `observations' v (left hand side of regression model) to K
 K(:,np+1:np+m) = [v(p+1:n, :)];
 
@@ -4002,8 +4052,8 @@ function [sbc, fpe, logdp, np] = arordIn(R, m, mcor, ne, pmin, pmax)
 %  criterion for an AR model of order p < pmax, pmax-p initial values
 %  of the given time series are ignored.
 %
-%  ARORD is called by ARFIT.
-%
+%  ARORD is called by ARFIT. 
+%	
 %  See also ARFIT, ARQR.
 
 %  For testing purposes, ARORD also returns the vectors logdp and np,
@@ -4093,7 +4143,7 @@ end
 function y = Filter0In(b, x)
 
 if size(x,1) == 1
-    x = x(:);
+	x = x(:);
 end
 
 % if mod(length(b),2)~=1
@@ -4110,14 +4160,16 @@ end
 y = [y0(shift+1:end,:) ; z(1:shift,:)];
 
 end
+
+
 % computes the available memory in bytes
 function HowMuch = FreeMemoryIn
 if isunix
-    [junk mem] = unix('vmstat |tail -1|awk ''{print $4} {print $6}''');
-    HowMuch = sum(mem);
+	[junk mem] = unix('vmstat |tail -1|awk ''{print $4} {print $6}''');
+	HowMuch = sum(mem);
 else
-    HowMuch = 200;
-    %200Mb for windows machin
-    
+	HowMuch = 200;
+	%200Mb for windows machin
+	
 end
 end
