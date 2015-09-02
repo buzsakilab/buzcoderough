@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of plotIntervals</title>
+  <meta name="keywords" content="plotIntervals">
+  <meta name="description" content="% Plots a horizontal line showing timing of each interval in a set">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">@intervalSet</a> &gt; plotIntervals.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for @intervalSet&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>plotIntervals
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>% Plots a horizontal line showing timing of each interval in a set</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function plotIntervals(intervals) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> % Plots a horizontal line showing timing of each interval in a set
+
+ USAGE:
+     plotIntervals(x)
+
+ INPUT:
+    x: intervalSet array to be plotted
+
+ Brendon Watson, 2014</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="End.html" class="code" title="function S = End(O, TimeUnits)">End</a>	Ending time of the intervalSet object</li><li><a href="Start.html" class="code" title="function S = Start(O, TimeUnits)">Start</a>	Starting times of for each interval in the set</li><li><a href="plot.html" class="code" title="function plot(is)">plot</a>	makes a plot to represent an intervalset but simply plotting horizontal</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function plotIntervals(intervals)</a>
+0002 <span class="comment">% % Plots a horizontal line showing timing of each interval in a set</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% USAGE:</span>
+0005 <span class="comment">%     plotIntervals(x)</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% INPUT:</span>
+0008 <span class="comment">%    x: intervalSet array to be plotted</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% Brendon Watson, 2014</span>
+0011 
+0012 
+0013 sta = <a href="Start.html" class="code" title="function S = Start(O, TimeUnits)">Start</a>(intervals);
+0014 sto = <a href="End.html" class="code" title="function S = End(O, TimeUnits)">End</a>(intervals);
+0015 
+0016 <a href="plot.html" class="code" title="function plot(is)">plot</a>([sta sto]',zeros(size([sta sto]')))</pre></div>
+<hr><address>Generated on Tue 01-Sep-2015 15:03:35 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

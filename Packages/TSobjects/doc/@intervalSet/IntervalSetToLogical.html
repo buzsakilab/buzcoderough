@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of IntervalSetToLogical</title>
+  <meta name="keywords" content="IntervalSetToLogical">
+  <meta name="description" content="Converts intervalset data into a long logical array where periods inside">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">@intervalSet</a> &gt; IntervalSetToLogical.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for @intervalSet&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>IntervalSetToLogical
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>Converts intervalset data into a long logical array where periods inside</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function boolean = IntervalsToLogical(is) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Converts intervalset data into a long logical array where periods inside
+ any interval are 1 and outside interval are 0.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="End.html" class="code" title="function S = End(O, TimeUnits)">End</a>	Ending time of the intervalSet object</li><li><a href="FirstTime.html" class="code" title="function ft = FirstTime(O, TimeUnits)">FirstTime</a>	First time of the intervalSet</li><li><a href="LastTime.html" class="code" title="function lt = LastTime(O, TimeUnits)">LastTime</a>	Returns last time of an intervalSet</li><li><a href="Start.html" class="code" title="function S = Start(O, TimeUnits)">Start</a>	Starting times of for each interval in the set</li><li><a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>	Returns the length of each interval in the set</li><li><a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>	Returns subsets of an intervalSet</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function boolean = IntervalsToLogical(is)</a>
+0002 <span class="comment">% Converts intervalset data into a long logical array where periods inside</span>
+0003 <span class="comment">% any interval are 1 and outside interval are 0.</span>
+0004 
+0005 
+0006 b = <a href="FirstTime.html" class="code" title="function ft = FirstTime(O, TimeUnits)">FirstTime</a>(is);
+0007 e = <a href="LastTime.html" class="code" title="function lt = LastTime(O, TimeUnits)">LastTime</a>(is);
+0008 
+0009 boolean = b:e;
+0010 
+0011 <span class="keyword">for</span> a = 1:<a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>(<a href="length.html" class="code" title="function L = length(O, TimeUnits, varargin)">length</a>(is));
+0012     boolean(<a href="Start.html" class="code" title="function S = Start(O, TimeUnits)">Start</a>(<a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>(is,a)):<a href="End.html" class="code" title="function S = End(O, TimeUnits)">End</a>(<a href="subset.html" class="code" title="function A = subset(O, ix)">subset</a>(is,a))) = 1;
+0013 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Tue 01-Sep-2015 15:03:35 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
