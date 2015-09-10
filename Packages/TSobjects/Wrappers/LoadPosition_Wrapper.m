@@ -4,7 +4,7 @@ function [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename)
 % loads position and speed from a position file file (ending in .whl)
 %
 % USAGE
-%     [X,Y,V,GoodRanges] = HeadDirectionWhl(fbasename)
+%     [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename)
 %     
 % INPUT:
 %     fbasename: session file basename
@@ -12,10 +12,11 @@ function [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename)
 % OUTPUT:
 %     X: a tsd object of x position values
 %     Y: a tsd object of y position values
-%     V: a tsd object of  position values
+%     V: a tsd object of velocity values
 %     GoodRanges: a intervalSet object where LEDs were successfully detected
 
 % Adrien Peyrache, 2011
+
 
 smoothWidth = 30;
 
@@ -46,6 +47,8 @@ V = V/dt;
 
 X = tsd(t*10000,X);
 Y = tsd(t*10000,Y);
-V = tsd(t*10000,[0;V]);
+% V = tsd(t*10000,[0;V]); % this crashed - fixed by Luke Sjulson, 2015-09-03
+V = tsd(t*10000, V);
+
 
 GoodRanges = intervalSet(10000*GoodRanges(:,1),10000*GoodRanges(:,2));
