@@ -61,7 +61,7 @@ while i <= length(varargin),
 			group = ones(size(id));
 		else
 			if length(group) == 1,
-				group = repmat(group,size(id),1);
+				group = repmat(group, [size(id),1]); 
 			elseif length(group) ~= length(id),
 				error(['Incorrect groups at parameter #' int2str(i) ' (type ''help <a href="matlab:help CCGParameters">CCGParameters</a>'' for details).']);
 			end
