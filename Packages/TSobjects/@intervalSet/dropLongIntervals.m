@@ -8,7 +8,7 @@ function iso = dropLongIntervals(is, thr, varargin)
 %  	INPUTS:
 %  	is  - an intervalSet
 %  	thr - a duration threshold; all intervals longer than thr will be
-%  	dropped
+%  	dropped, units of 1/10000ths of a second by default
 %  	
 %  	OUTPUTS:
 %  	iso - the resulting intervalSet

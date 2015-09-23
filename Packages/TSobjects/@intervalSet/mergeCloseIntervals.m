@@ -8,7 +8,8 @@ function iso = mergeCloseIntervals(is, thr, varargin)
 %  	INPUTS:
 %  	is  - an intervalSet
 %  	thr - a distance threshold; if two consecutive intervals are closer than
-%  	      thr they will be merged 
+%  	      thr they will be merged.  Default timeunits is 1/10000ths of a
+%  	      second.
 %  	
 %  	OUTPUTS:
 %  	iso - the resulting intervalSet

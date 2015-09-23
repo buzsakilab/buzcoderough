@@ -14,7 +14,7 @@ function plot(tsd)
 % copyright (c) 2014 Brendon O. Watson
 
 
-x = Range(tsd);
+x = Range(tsd,'s');
 y = Data(tsd);
 if sum(x-y)==0;
     y = zeros(size(x));
