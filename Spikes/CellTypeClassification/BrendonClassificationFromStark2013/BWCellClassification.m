@@ -1,84 +1,56 @@
 % function  [CellClassOutput, PyrBoundary] = BWCellClassification (fileBase, SpkWvform_all, SpkWvform_idx, Cells, ECells, ICells)
-function  [CellClassOutput, PyrBoundary,Waveforms] = BWCellClassification (basename, cellshanknums, shanks, ESynapseCells, ISynapseCells)
+function  [CellClassOutput, PyrBoundary,Waveforms] = BWCellClassification (filebasename, cellshanknums, shanks, ESynapseCells, ISynapseCells)
+% Loads cell spike waveforms from the local folder, characterizes them and
+% separates them into E vs I cells.  Manual verification based on clickable
+% gui from Shige.
 % 
+% INPUTS
+% filebasename - basename of files in the local folder
+% cellshanknums - per-shank number of each cell to load, ie cell 2 on shank 4 has a
+%                 cellshanknum of 2
+% shanks - spikegroup numbers of each cell, these corresond to .clu.x
+%                 numbers
+% ESynapseCells - pre-labeled E cells, ie from synaptic interactions
+% ISynapseCells - pre-labeled I cells, ie from synaptic interactions
+%
+% OUTPUTS
+% CellClassOutput - array with multiple columns:
+%        - Column 1: cell numbers in order
+%        - Column 2: trough-peak lag in ms
+%        - Column 3: wavelet-based spike width
+%        - Column 4: neurons classified as having I-like waveforms
+%        - Column 5: neurons classified as having E-like waveforms
+% PyrBoundary - x,y of manually drawn line of boundary
+% Waveforms - the saved waveforms per cell
+%
 % Mixture of functions from Shigeyoshi Fujisawa (WaveShapeClassification),
 % Adrien Peyrache (wavelet-based determination of spike width) and Eran Stark (wfeatures, spikestats).
-% 
-% OUTPUT
-% CellClassOutput(:,1) = cellnums;
-% CellClassOutput(:,2) = trough to peak time in ms
-% CellClassOutput(:,3) = full trough time in ms
-% CellClassOutput(:,4) = -1 for int-like cells, 1 for exc-like cells
-% CellClassOutput(:,5) = 1 for CCG-confirmed E cells, -1 for CCG-confirmed I cells;
+%
 % Brendon Watson 2014
 
-bmd = load([basename '_BasicMetaData.mat']);
-Par = bmd.Par;
-% Par = LoadPar([basename '.xml']);
+
+% if ~exist('basepath','var')
+%     [~,filebasename,~] = fileparts(cd);
+% end
+Par = LoadPar([filebasename '.xml']);
 cellnums = 1:length(shanks);
-if isfield(bmd,'masterpath')
-    fpath = bmd.masterpath;
-else
-    fpath = bmd.basepath;
-end
 
-if isfield(bmd,'mastername')
-    fname = bmd.mastername;
-else
-    fname = bmd.basename;
-end
-
-
-% for a = 1:size(Par.SpkGrps,2);
-%     ShankMap{a} = Par.SpkGrps(a).Channels; % cell array of which clustering groups had which numbers of
-% % elements
-% end
-%
-%Wdepth    = 0.2;% the depth at which you measure the width of waveform - as a proportion of the peak height
-% Wdepth    = 0.5;% the depth at which you measure the width of waveform - as a proportion of the peak height
-% CenterT   = round(Par.SampleRate * 0.003)+1; % center point, defined by 'AllSpkWaveform.m'
 OneMs = round(Par.SampleRate/1000);
-% Center2ms = [(CenterT-OneMs):(CenterT+OneMs)]; %time points of center 2ms
-% 
-% if nargin<3; PlotWaves=0;end
-% if nargin<4; ECells=[];ICells=[];end
-% if nargin<6; PyrBoundary=[];end
-
-% %% get the waveform on the maximal channel... from Shige
-% for ii=1:length(Cells)
-%    mycell  = SpkWvform_idx(SpkWvform_idx(:,1)==Cells(ii),1);
-%    myshank = SpkWvform_idx(SpkWvform_idx(:,1)==Cells(ii),2);
-% 
-%    channels_of_myshank = ShankMap{myshank}+1; %+1 compensates for channel numbers starting at 0
-%    mywaveall = []; 
-%    mytroughall = []; 
-%    mypeakall = []; 
-%    mypeaksizeall = [];
-%    
-%    for kk=1:length(channels_of_myshank)
-%       mywaveall(:,kk)  = shiftdim(SpkWvform_all(mycell,channels_of_myshank(kk),:),2);
-%       mytroughall(kk)  = min(mywaveall(Center2ms,kk));
-%       mypeakall(kk)    = max(mywaveall(Center2ms,kk));
-%       mypeaksizeall(kk)= mypeakall(kk) - mytroughall(kk);
-%    end
-%    mychannel = channels_of_myshank(mypeaksizeall==max(mypeaksizeall));
-% 
-% %% save max waves
-%    waves(:,ii)     = shiftdim(SpkWvform_all(mycell,mychannel,:),2);
-% end
 MaxWaves = [];
 allshanks = unique(shanks);
+
+%% gather waves
 for a = 1:length(allshanks);
     thisshank = allshanks(a);
     AllWaves{thisshank} = [];%separated AllWaves in case each shank has diff number of sites
 %     theseChannels = Par.SpkGrps(thisshank).Channels;
     numChannels = length(Par.SpkGrps(thisshank).Channels);
     nSamples = Par.SpkGrps(a).nSamples;
-    spkname = fullfile(fpath,[fname '.spk.' num2str(thisshank)]);
+    spkname = fullfile(fpath,[filebasename '.spk.' num2str(thisshank)]);
     
     cellsthisshank = cellnums(shanks==thisshank);
     intrashankclunums = cellshanknums(shanks == thisshank);
-    cluname = fullfile(fpath,[fname '.clu.' num2str(thisshank)]);
+    cluname = fullfile(fpath,[filebasename '.clu.' num2str(thisshank)]);
     clu = LoadClu(cluname);
     for b = 1:length(cellsthisshank)
         spikesthiscell = find(clu == intrashankclunums(b));        
@@ -91,38 +63,18 @@ for a = 1:length(allshanks);
     disp(['Shank ',num2str(a),' (Orig#:' num2str(thisshank) ') Done'])
     AllWaves{thisshank}(:,:,1) = [];
 end
-    
+
+%% get trough-peak delay times
 AllWaves(:,:,1) = [];
-%     >> LOaded all spikes from shank
-%     go thru each cell using clu, get indices, grab and average spikes then ...
-%     waves(:,a) = mean(waveforms,1);
-% end
-% % %% get trough to peak (Eran Code)
-% % [ hw, asy, tp] = wfeatures(waves, 0); 
-% 
-% %% get trough to peak time
 for a = 1:length(cellnums)
     thiswave = MaxWaves(:,a);
     [minval,minpos] = min(thiswave);
     minpos = minpos(1);
     [maxval,maxpos] = max(thiswave);
-%     if abs(maxval) > abs(minval)%if it's an upsidedown spike... flip everything
-%         try
-%             [dummy,minpos] = min(thiswave(maxpos+1:end));
-%             minpos = maxpos+minpos;
-%             tp(a) = minpos-maxpos;
-%         catch
-%             [dummy,maxpos] = max(thiswave(minpos+1:end));
-%             maxpos = maxpos+minpos;
-%             tp(a) = maxpos-minpos;
-%         end
-%     else %if min is larger deviation than the max deviation... ie normal spike
         [dummy,maxpos] = max(thiswave(minpos+1:end));
         maxpos=maxpos(1);
         maxpos = maxpos+minpos;
         tp(a) = maxpos-minpos;
-%     end
-
 end
 
 %% get spike width by taking inverse of max frequency in spectrum (based on Adrien's use of Eran's getWavelet)
@@ -162,8 +114,8 @@ ylabel('Wave width (via inverse frequency) (ms)')
 %% Mean waveforms output
 TroughPeakMs = x;
 SpikeWidthMs = y;
-MeanWaveforms = v2struct(AllWaves,MaxWaves,cellnums,cellshanknums,shanks,basename,TroughPeakMs,SpikeWidthMs,ELike);
-save(fullfile(bmd.basepath,[basename,'_MeanWaveforms.mat']),'MeanWaveforms')
+MeanWaveforms = v2struct(AllWaves,MaxWaves,cellnums,cellshanknums,shanks,filebasename,TroughPeakMs,SpikeWidthMs,ELike);
+save(fullfile(bmd.basepath,[filebasename,'_MeanWaveforms.mat']),'MeanWaveforms')
 
 %% Ready output variable
 CellClassOutput(:,1) = cellnums;

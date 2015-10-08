@@ -40,7 +40,7 @@ h_lastline=[];
     zoomoff = 1;
     while 1
         [x y button]=PointInput(1);
-        res = button*zoomoff;      title('Discriminate pyr and int (select Pyramidal)');
+        res = button*zoomoff;      title('Discriminate pyr and int (select Pyramidal), right click to close polygon');
 
         switch res
             case 1 % left button
