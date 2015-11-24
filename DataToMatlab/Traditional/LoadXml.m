@@ -8,30 +8,45 @@
 % more can be added later (e.g. parameters of the process scripts)
 % this script is written for xml version 1.1 .. older version doesn't work.
 % additions are welcome
-function [xml, rxml] = LoadXml(FileBase,varargin)
+% 
+% By default, fbasename is the name of the directory where the data are, so
+% the exact xml file path should not be put in argument
+% By calling
+% xml = LoadXml(xmlfile,'raw')
+% the xml file specified in argument will be loaded
+% (added by A Peyrache)
+
+function [xml, rxml] = LoadXml(fbasename,varargin)
 xml = struct;
 
+%if isempty(varargin)
+%    [fbasename mergedir rootdir] = extractfbasename(fbasename);
+%elseif strcmpi(varargin,'raw')
+%    fprintf('Loading directly xml file')
+%else
+%    error('Unrecognized option')
+%end
 %if xml was in the filebase by chance
-xmli = strfind(FileBase,'.xml');
+xmli = strfind(fbasename,'.xml');
 if ~isempty(xmli)
-    FileBase = FileBase(1:xmli-1);
+    fbasename = fbasename(1:xmli-1);
 end
-rxml = xmltools([FileBase '.xml']);
+rxml = xmltools([fbasename '.xml']);
 
 rxml = rxml.child(2);
 
 % from this level all children are the different parameters fields
 
-xml.FileName = FileBase;
+xml.FileName = fbasename;
 
 for i=1:length(rxml.child)
 
-    switch rxml.child(i).tag
+    switch lower(rxml.child(i).tag)
         
-        case 'generalInfo'
+        case 'generalinfo'
             xml.Date = rxml.child(i).child(1).value; % date of xml file creation?
 
-        case 'acquisitionSystem'
+        case 'acquisitionsystem'
             xml.nBits = str2num(rxml.child(i).child(1).value); % number of bits of the file
             xml.nChannels = str2num(rxml.child(i).child(2).value);
             xml.SampleRate = str2num(rxml.child(i).child(3).value);
@@ -40,10 +55,10 @@ for i=1:length(rxml.child)
             xml.Amplification = str2num(rxml.child(i).child(5).value);
             xml.Offset =  str2num(rxml.child(i).child(6).value);
             
-        case 'fieldPotentials'
+        case 'fieldpotentials'
             xml.lfpSampleRate = str2num(rxml.child(i).child.value);
             
-        case 'anatomicalDescription'
+        case 'anatomicaldescription'
             tmp = rxml.child(i).child.child;
             for grpI =1:length(tmp)
                 for chI=1:length(tmp(grpI).child)
@@ -52,7 +67,7 @@ for i=1:length(rxml.child)
                 end
             end
             
-        case 'spikeDetection'
+        case 'spikedetection'
             if ~isempty(rxml.child(i).child)
                 tmp =rxml.child(i).child.child;
                 for grpI =1:length(tmp)
@@ -84,12 +99,6 @@ for i=1:length(rxml.child)
                         end
                     end
                 end
-            end
-            
-            
-        case 'multiFileProcessing'  % if a merge file
-            for a = 1:length(rxml.child(i).child(2).child)
-                xml.multiFileProcessing{a} = rxml.child(i).child(2).child(a).value;
             end
     end
 
