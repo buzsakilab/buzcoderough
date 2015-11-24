@@ -1,4 +1,4 @@
-function [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename)
+function [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename, scaleFactor)
 
 
 % loads position and speed from a position file file (ending in .whl)
@@ -8,6 +8,7 @@ function [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename)
 %     
 % INPUT:
 %     fbasename: session file basename
+%     scaleFactor: scaling factor to convert pixels to cm (in units of cm/pixel)
 %	
 % OUTPUT:
 %     X: a tsd object of x position values
@@ -16,6 +17,7 @@ function [X,Y,V,GoodRanges] = LoadPosition_Wrapper(fbasename)
 %     GoodRanges: a intervalSet object where LEDs were successfully detected
 
 % Adrien Peyrache, 2011
+% edited by Luke Sjulson to add scaleFactor and use units of seconds, 2015-11
 
 
 smoothWidth = 30;
@@ -29,9 +31,14 @@ else
     Y = whl(:,2);
 end
 
+% convert to units of cm
+if nargin<2, scaleFactor = 1; end
+X = X.*scaleFactor;
+Y = Y.*scaleFactor;
+
 dx = diff(X);
 dy = diff(Y);
-dt = 1/median(diff(t));
+dt = median(diff(t));
 v = [sqrt(dx.^2+dy.^2);0];
 
 gw = gausswin(smoothWidth);
@@ -45,10 +52,8 @@ v(isnan(v))=0;
 V = convn(v,gw,'same');
 V = V/dt;
 
-X = tsd(t*10000,X);
-Y = tsd(t*10000,Y);
-% V = tsd(t*10000,[0;V]); % this crashed - fixed by Luke Sjulson, 2015-09-03
-V = tsd(t*10000, V);
+X = tsd(t,X);
+Y = tsd(t,Y);
+V = tsd(t, V);
 
-
-GoodRanges = intervalSet(10000*GoodRanges(:,1),10000*GoodRanges(:,2));
+GoodRanges = intervalSet(GoodRanges(:,1),GoodRanges(:,2));
