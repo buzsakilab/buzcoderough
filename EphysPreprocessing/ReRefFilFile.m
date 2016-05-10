@@ -74,6 +74,7 @@ else
         msg = '';
 
     catch
+        fprintf(['Error occurred in processing ' fname '. File not rereferenced.\n']);
         keyboard
         returnVar = 0;
         msg = lasterr; 
