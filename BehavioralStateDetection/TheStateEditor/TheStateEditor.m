@@ -27,9 +27,9 @@
 %               (N = round((length(eeg)/eegFS) - 1). It has a value between
 %               0 and 5 for each bin (0 = 'no state', 1 = 'awake', 2 = 
 %               'Light/Drowzy', 3 = 'NREM', 4 = 'Intermediate', 5 = 'REM').
-%   'events' -  a N by 2 matrix where the first column are event#'s (1 
-%               through 10) and the 2nd column are the event times in 
-%               seconds (in arbitrary precision). 
+%   'events' -  a N by 2 matrix where the first column are event type ID's 
+%               (1 through max of 10 types) and the 2nd column are the 
+%               event times in seconds (in arbitrary precision). 
 %   'transitions' - a Nx3 matrix of exact state transition times. 1st 
 %                   collumn: state number, 2nd collumn: state start time 
 %                   (in seconds), 3rd column: 	end time (in seconds). The 
@@ -231,6 +231,7 @@ end
 
 
 %% check for prior processing
+states = [];
 if FileExistsIn([baseName,'.eegstates.mat'])
     if ~exist('StateInfo','var')
         StateInfo = load([baseName,'.eegstates.mat']);
@@ -295,7 +296,7 @@ else
         
         
         annotation('textbox',  'Position', [0.02, 0.65, 0.9, 0.07], 'string', ['\bf\fontsize{10}Choose a motion signal to use:'], 'EdgeColor', 'none');
-        mOptions = 'None|Load From .whl file (head tracking)|Load from eeg ch(s) (accelerometer/motion pad)|Load from eeg ch(s) (MEG)|Load from .mat file';
+        mOptions = 'None|Load From .whl file (head tracking)|Load from eeg ch(s) (accelerometer/motion pad)|Load from eeg ch(s) (MEG)|Load from TimeValue Pair .mat (_EMGCorr.mat)|Load from .mat file';
         mInput = uicontrol('style', 'popupmenu', 'string', mOptions );
         set(mInput, 'Units', 'normalized', 'Position', [0.37, 0.5, 0.62, 0.1]);
         
@@ -516,8 +517,29 @@ else
                 MotionType = 'Channels (MEG)';
                 disp('Done.');
                 
-                
             case 5
+                MotionType = 'TimeVal'
+                varname = [];
+%                 b = msgbox(['Note: Motion vector must be 1xn where n is the number of time bins in seconds (n = ', int2str(length(fspec{1}.to)), ')']);
+%                 uiwait(b);
+                [name, path] = uigetfile('*.mat', 'Choose a file with time:val pairs (ie EMGCorr):');
+                matobj = matfile(fullfile(path,name));
+                w = whos(matobj);
+                if length(w)>1
+                    for a = 1:length(w);
+                        n{a} = w(a).name;
+                    end;
+                    varname = listdlg('ListString',n,'SelectionMode','Single','Name','Variable choice','Prompt','Choose variable to load')
+                end
+                
+                tos = fspec{1}.to;
+                if isempty(varname);
+                    motion = LoadTimeStampValuePairs(tos,fullfile(path,name));
+                else
+                    motion = LoadTimeStampValuePairs(tos,fullfile(path,name),varname);
+                end
+                
+            case 6
                 MotionType = 'File';
                 b = msgbox(['Note: Motion vector must be 1xn where n is the number of time bins in seconds (n = ', int2str(length(fspec{1}.to)), ')']);
                 uiwait(b);
@@ -526,8 +548,7 @@ else
                 if isstruct(motion)
                     f1 = fieldnames(motion);
                     motion = motion.(f1{1});
-                end
-                
+                end                    
                 
                 mChs = name;
         end
@@ -546,6 +567,18 @@ else
         StateInfo.rawEeg = rawEeg;
     end
     
+    if exist([baseName,'_SleepScore.mat'],'file')
+       load([baseName,'_SleepScore.mat'])
+       load([baseName,'_SleepScore.mat'])
+       stateslen = max([max(max(StateIntervals.NREMstate)) max(max(StateIntervals.REMstate)) max(max(StateIntervals.WAKEstate)) ]); 
+       states = zeros(1,stateslen);
+       states(find(inttoboolIn(StateIntervals.WAKEstate))) = 1;
+       states(find(inttoboolIn(StateIntervals.MAstate))) = 2;
+       states(find(inttoboolIn(StateIntervals.NREMstate))) = 3;
+       states(find(inttoboolIn(StateIntervals.REMstate))) = 5;
+       states = cat(2,states,zeros(1,length(StateInfo.fspec{1}.to)-length(states)));
+    end
+    
     disp(['Saving ', baseName, '.eegstates.mat...']);
     try
         save([baseName, '.eegstates.mat'], 'StateInfo');
@@ -559,10 +592,15 @@ disp('So far so good. Now, loading StateEditor GUI. This is going to be great!')
 if supressGUI == 1
     return;
 else
-    StateEditorSetup(StateInfo.fspec, StateInfo.motion, [], rawEeg, baseName, FO, eegFS);
+    StateEditorSetup(StateInfo.fspec, StateInfo.motion, states, rawEeg, baseName, FO, eegFS);
 end
 
+if exist([baseName,'-states.mat'],'file')
+    LoadStatesAutoNoMsgs
 end
+
+
+end%function end
 
 
 function StateEditorSetup(f, MP, States, eeg, baseName, FO, eegFS)
@@ -603,11 +641,17 @@ FO.eegFS = eegFS;
 
 FO.overlayLines = {};
 
-FO.fig = figure('KeyReleaseFcn', {@DefKey}, 'Position', get(0,'Screensize'));
+posvar = get(0,'Screensize');
+posvar(1) = 20;
+posvar(2) = 20;
+posvar(3) = posvar(3)-100;
+posvar(4) = posvar(4)-100;
+FO.fig = figure('KeyReleaseFcn', {@DefKey}, 'Position', posvar);
 set(FO.fig, 'numbertitle', 'off', 'name', ['States: ', FO.baseName]);
 set(FO.fig,'WindowButtonDownFcn', {@MouseClick}, 'WindowButtonUpFcn', {@unMouseClick}, 'Units', 'normalized');
 set(FO.fig, 'WindowButtonMotionFcn', {@Nothing}, 'WindowScrollWheelFcn', {@MouseScroll});
 set(FO.fig, 'CloseRequestFcn', {@CloseDialog});
+set(FO.fig, 'Tag', 'StateEditorMaster');
 FO.madeChanges = 0;
 FO.startLocation = [];
 
@@ -1004,13 +1048,13 @@ end
 
 
 function DefKey(f, e)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 switch e.Key
     case 'uparrow'
         if strcmpi(FO.currAction, 'FreqResize')
             ResizeFreqY(1);
-            FO = guidata(gcf);
+            obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
         else
             for i = 1:FO.nCh
                 v = caxis(gca); caxis(gca, v - 0.1);
@@ -1019,7 +1063,7 @@ switch e.Key
     case 'downarrow'
         if strcmpi(FO.currAction, 'FreqResize')
             ResizeFreqY(-1);
-            FO = guidata(gcf);
+            obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
         else
             for i = 1:FO.nCh
                 v = caxis(gca); caxis(gca, v + 0.1);
@@ -1057,7 +1101,7 @@ switch e.Key
         set(FO.sax{1}, 'XLim', l);
         guidata(gcf, FO);
         updateEEG;
-        FO = guidata(gcf);
+        obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
         % updateMidline([]);
     case 'leftarrow'
         l = get(FO.sax{1}, 'XLim');
@@ -1072,7 +1116,7 @@ switch e.Key
         guidata(gcf, FO);
         updateEEG;
         
-        FO = guidata(gcf);
+        obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
         %    updateMidline([]);
     case '1'
         FO.currentState = 1;
@@ -1162,6 +1206,8 @@ switch e.Key
             
         end
         set(gcf, 'Name', ['States: ', FO.baseName, ' - Default']);
+    case 'a'
+        FO = ViewAutoScoreThresholds(gcf)
     case 'f'
         if strcmpi(FO.currAction, 'FreqResize')
             FO.currAction = 'Browse';
@@ -1170,15 +1216,15 @@ switch e.Key
         end
     case 'u'
         undoChange;
-        FO = guidata(gcf);
+        obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     case 'r'
         set(FO.sax{1}, 'XLim', FO.lims);
     case 's'
         saveStates;
-        FO = guidata(gcf);
+        obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     case 'l'
         LoadStates;
-        FO = guidata(gcf);
+        obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     case 'n'
         nextEvent;
     case 'p'
@@ -1282,20 +1328,22 @@ switch e.Key
             ' '...
             '''\bfL''\rm-- Load state vector/events/transitions from file',...
             ' '...
+            '''\bfA''\rm-- Autoscoring parameters: View and manipulate',...
+            ' '...
             'Also note the editable fields and lists on the right hand panel!'
                 
             });
         uiwait(helpFig);
-        FO = guidata(gcf);
+        obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 end
-guidata(gcf, FO);
+guidata(FO.fig, FO);
 UpdateText;
 end
 
 
 
 function updateEEG(varargin)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 % try
     eeg = getappdata(gcf,'eeg');
     eegX = (1:length(eeg{1}))/(FO.eegFS/FO.downsample);
@@ -1360,13 +1408,12 @@ end
 %     set(FO.eax{i}, 'XLim', [pos - FO.eegShow/2, pos + FO.eegShow/2]);
 % end
 
-
-
-
 guidata(gcf, FO);
 end
+
+
 function MouseClick(e, src)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 global isClicking
 persistent chk lastButton
 
@@ -1776,7 +1823,7 @@ switch(lfpClick)
         end
 end
 
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.clickPoint = pointTo;
 guidata(gcf, FO);
 if updateEegToClick == 1
@@ -1787,7 +1834,7 @@ end
 
 function MouseScroll(e, src)
 
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 c = get(gcf, 'CurrentPoint');
 xG = (c(1) >= FO.xplotLims(1)) & (c(1) <=  FO.xplotLims(2));
@@ -1889,7 +1936,7 @@ switch lfpClick
 end
 
 
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.clickPoint = pointTo;
 guidata(gcf, FO);
 
@@ -1909,7 +1956,7 @@ a = 0;
 end
 
 function addStateLine(location)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 if isempty(FO.startLine)
     ax = FO.lax;
     yl = get(ax, 'YLim');
@@ -1953,13 +2000,14 @@ else
     
     guidata(gcf, FO);
     addState(location);
-    FO = guidata(gcf);
+    obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 end
 guidata(gcf, FO);
 UpdateText;
 end
+
 function addState(loc2)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 s = FO.currentState;
 f1 = dsearchn(FO.to, FO.startLocation);
 f2 = dsearchn(FO.to, loc2);
@@ -1970,7 +2018,7 @@ oldState = FO.States(f(1):f(2));
 if length(FO.stateHistory) > FO.stateHistoryNum;
     FO.stateHistory = FO.stateHistory(1:FO.stateHistoryNum);
     FO.newStates = FO.newStates(1:FO.stateHistoryNum);
-    b = msgbox('Loosing a bit of history');
+    b = msgbox('Losing a bit of history');
     uiwait(b);
 end
 if FO.startLocation > loc2
@@ -1988,7 +2036,7 @@ FO.newStates{end}.location = f(1);
 FO.startLocation  = [];
 guidata(gcf, FO);
 modifyStates(f(1), newState);
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 updateEEG;
 UpdateText;
 end
@@ -1999,7 +2047,7 @@ if isempty(varargin)
 else
     makeGrey = varargin{1};
 end
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 colors = FO.colors;
 rows = FO.rows;
@@ -2020,8 +2068,10 @@ FO.madeChanges = 1;
 set(FO.ilab, 'CData', FO.SM);
 guidata(gcf, FO);
 end
+
+
 function undoChange(varargin)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 if FO.stateHistoryNum >= 1
     newState = FO.stateHistory{FO.stateHistoryNum}.state;
@@ -2029,7 +2079,7 @@ if FO.stateHistoryNum >= 1
     FO.stateHistoryNum = FO.stateHistoryNum - 1;
     guidata(gcf, FO);
     modifyStates(startLoc, newState);
-    FO = guidata(gcf);
+    obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     latestTrans = max(find(FO.TransHistoryTracker == 1));
     FO.TransHistoryTracker(latestTrans) = 0;
     set(gcf, 'Name', ['States: ', FO.baseName, '- History rewound to ', int2str(FO.stateHistoryNum), ' of ', int2str(length(FO.stateHistory))]);
@@ -2041,8 +2091,9 @@ end
 guidata(gcf, FO);
 
 end
+
 function redoChange(varargin)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 if length(FO.newStates) > FO.stateHistoryNum
     FO.stateHistoryNum = FO.stateHistoryNum + 1;
     newState = FO.newStates{FO.stateHistoryNum}.state;
@@ -2065,7 +2116,7 @@ guidata(gcf, FO);
 end
 
 function saved = saveStates
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 global answer1
 saved = 0;
 name = [];
@@ -2085,7 +2136,7 @@ incTransitions = uicontrol('style', 'checkbox', 'string', 'Include Transition Ti
 set(incTransitions, 'Units', 'normalized', 'Position', [0.1, 0.48, 0.72, 0.1], 'Value', 1);
 
 incHist = uicontrol('style', 'checkbox', 'string', 'Include History of Changes');
-set(incHist, 'Units', 'normalized', 'Position', [0.1, 0.36, 0.35, 0.1]);
+set(incHist, 'Units', 'normalized', 'Position', [0.1, 0.36, 0.35, 0.1], 'Value', 1);
 
 saveb = uicontrol('style', 'pushbutton', 'string', 'Save', 'Callback', 'global answer1; uiresume(gcbf); answer1 = 1;');
 set(saveb, 'Units', 'normalized', 'Position', [0.4, 0.1, 0.25, 0.2], 'FontSize', 12);
@@ -2100,7 +2151,7 @@ includeEvents = get(incEvents, 'Value');
 incTransitions = get(incTransitions, 'Value');
 
 close(FO.saveFig);
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 if answer1 == 0
     return;
 else
@@ -2139,11 +2190,12 @@ else
         toSave = [toSave, ' ''transitions'','];
     end
     
-    
-    history = [];
-    history.stateHistory = FO.stateHistory;
-    history.newStates = FO.newStates;
-    history.stateHistoryNum = FO.stateHistoryNum;
+    if includeH
+        history.stateHistory = FO.stateHistory;
+        history.newStates = FO.newStates;
+        history.stateHistoryNum = FO.stateHistoryNum;
+        toSave = [toSave, ' ''history'','];
+    end
     
     try
         eval(['save(fileName, ', toSave(1:(end - 1)), ');']);
@@ -2164,8 +2216,10 @@ end
 
 guidata(gcf, FO);
 end
+
+
 function LoadStates
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 
 global answer1;
@@ -2195,7 +2249,7 @@ loadEvents = get(loadEvents, 'Value');
 loadTransitions = get(loadTransitions, 'Value');
 
 close(FO.loadFig);
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 if answer1 == 0
     return;
 else
@@ -2222,11 +2276,14 @@ else
     
     if loadStates == 1    
         if isfield(newS, st)
+            if length(size(newS.states))==2 && sum(size(newS.states)==1) && numel(newS.states) == numel(FO.States)%make tolerant to vert or horiz vectors
+                newS.states = newS.states(:)';
+            end
 
             if sum(size(FO.States) == size(newS.(st))) ~= 2
                 b = msgbox({'Error: states field must be a 1xN vector file', 'where N == the number of bins.'});
                 uiwait(b);
-                FO = guidata(gcf);
+                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
                 return;
             end
 
@@ -2241,7 +2298,7 @@ else
             if size(events, 2) ~= 2 & ~isempty(events)
                 b = msgbox({'Error: events field must be a Nx2 matrix file', 'where N == the number of events.'});
                 uiwait(b);
-                FO = guidata(gcf);
+                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
                 return;
             end
 
@@ -2257,7 +2314,7 @@ else
             if size(transitions, 2) ~= 3 & ~isempty(transitions)
                 b = msgbox({'Error: transitions field must be a Nx3 matrix file', 'where N == the number of transitions.'});
                 uiwait(b);
-                FO = guidata(gcf);
+                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
                 return;
             end
             
@@ -2267,16 +2324,16 @@ else
     end
 end
 
-successMsg = ['Found and loaded '];
-
-for i = 1:length(loaded)
-    successMsg = [successMsg, loaded{i}, ', '];
-end
-successMsg = [successMsg(1:(end - 2)), '.'];
-
-guidata(gcf, FO);
-b = msgbox(successMsg);
-uiwait(b);
+% successMsg = ['Found and loaded '];
+% 
+% for i = 1:length(loaded)
+%     successMsg = [successMsg, loaded{i}, ', '];
+% end
+% successMsg = [successMsg(1:(end - 2)), '.'];
+% 
+% guidata(gcf, FO);
+% b = msgbox(successMsg);
+% uiwait(b);
 
 EN = FO.eventNum;
 if isempty(FO.Events)
@@ -2285,10 +2342,142 @@ else
     updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
 end
 modifyStates(1, newS.(st), 0);
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.madeChanges = 0;
 guidata(gcf, FO);
 end
+
+
+function LoadStatesAutoNoMsgs
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+
+% global answer1;
+% answer1 = 0;
+% FO.loadFig = figure('Position', [382   353   438   200], 'Name', 'Load');
+% warn1 = {'\color{red}\fontsize{12}Warning: \color{black}Loading files will overwrite current work.'};
+% tx1 = annotation('textbox',  'Position', [0.02, 0.9, 0.9, 0.1], 'string', warn1 , 'EdgeColor', 'none');
+
+% loadStates = uicontrol('style', 'checkbox', 'string', 'Load State Vector (if ''.states'' field exists)');
+% set(loadStates, 'Units', 'normalized', 'Position', [0.1, 0.71, 0.72, 0.15], 'Value', 1, 'FontSize', 10);
+% 
+% loadEvents = uicontrol('style', 'checkbox', 'string', 'Load Event Matrix (if ''.events'' field exists)');
+% set(loadEvents, 'Units', 'normalized', 'Position', [0.1, 0.51, 0.72, 0.15], 'Value', 1, 'FontSize', 10);
+% 
+% loadTransitions =  uicontrol('style', 'checkbox', 'string', 'Load Transition Matrix (if ''.transitions'' field exists)');
+% set(loadTransitions, 'Units', 'normalized', 'Position', [0.1, 0.31, 0.72, 0.15], 'Value', 1, 'FontSize', 10);
+% 
+% loadb = uicontrol('style', 'pushbutton', 'string', 'Load ''.mat'' File', 'Callback', 'global answer1; uiresume(gcbf); answer1 = 1;');
+% set(loadb, 'Units', 'normalized', 'Position', [0.25, 0.06, 0.4, 0.2], 'FontSize', 12);
+% 
+% cancelb = uicontrol('style', 'pushbutton', 'string', 'Cancel', 'Callback', 'global answer1; uiresume(gcbf); answer1 = 0;');
+% set(cancelb, 'Units', 'normalized', 'Position', [0.7, 0.06, 0.25, 0.2], 'FontSize', 12);
+% uiwait(FO.loadFig);
+% 
+% loadStates = get(loadStates, 'Value');
+% loadEvents = get(loadEvents, 'Value');
+% loadTransitions = get(loadTransitions, 'Value');
+loadStates = 1;
+loadEvents = 1;
+loadTransitions = 1;
+
+% close(FO.loadFig);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+% if answer1 == 0
+%     return;
+% else
+%     
+%     [name, path] = uigetfile('*mat', 'Choose a state vector to load:');
+%     
+%     if name == 0
+%         return;
+%     end
+    
+    path = cd;
+    name = [FO.baseName '-states.mat'];
+    newS = load(fullfile(path, name));
+    
+    if ~isstruct(newS)
+        warndlg('Input must be a structure with fields ''.states'', ''.events'' and/or ''.transitions''.')
+        return;
+    end
+    
+    loaded = {};
+    if isfield(newS, 'States')
+        st = 'States';
+    else
+        st = 'states';
+    end
+    
+    if loadStates == 1    
+        if isfield(newS, st)
+
+            if sum(size(FO.States) == size(newS.(st))) ~= 2
+                b = msgbox({'Error: states field must be a 1xN vector file', 'where N == the number of bins.'});
+                uiwait(b);
+                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+                return;
+            end
+
+            FO.States = newS.(st);
+%             loaded{end + 1} = 'states vector';
+        end
+    end
+    
+    if loadEvents == 1    
+        if isfield(newS, 'events')
+            events = newS.events;
+            if size(events, 2) ~= 2 & ~isempty(events)
+                b = msgbox({'Error: events field must be a Nx2 matrix file', 'where N == the number of events.'});
+                uiwait(b);
+                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+                return;
+            end
+
+            FO.Events = events;
+%             loaded{end + 1} = 'event matrix';
+        end
+    end
+    
+    
+    if loadTransitions == 1
+        if isfield(newS, 'transitions')
+            transitions = newS.transitions;
+            if size(transitions, 2) ~= 3 & ~isempty(transitions)
+                b = msgbox({'Error: transitions field must be a Nx3 matrix file', 'where N == the number of transitions.'});
+                uiwait(b);
+                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+                return;
+            end
+            
+            FO.Transitions = transitions;
+%             loaded{end + 1} = 'transition matrix';
+        end
+    end
+% end
+
+% successMsg = ['Found and loaded '];
+% 
+% for i = 1:length(loaded)
+%     successMsg = [successMsg, loaded{i}, ', '];
+% end
+% successMsg = [successMsg(1:(end - 2)), '.'];
+
+guidata(gcf, FO);
+% b = msgbox(successMsg);
+% uiwait(b);
+
+EN = FO.eventNum;
+if isempty(FO.Events)
+    updateEventLines([]);
+else
+    updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
+end
+modifyStates(1, newS.(st), 0);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+FO.madeChanges = 0;
+guidata(gcf, FO);
+end
+
 
 
 function out = convWithIn(sp, win1)
@@ -2300,8 +2489,10 @@ for I = 1:size(sp, 2)
     out = [out, convtrimIn(sp(:, I), win1)/sum(win1)];
 end
 end
+
 function UpdateText
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster')
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 action = FO.currAction;
 
@@ -2340,20 +2531,16 @@ set(FO.eegWidthDisp, 'String', ['\bf\color{red}\fontsize{11}', num2str(FO.eegSho
 if isempty(FO.startLocation)
     set(FO.startLocDisp, 'Visible', 'off');
 else
-    set(FO.startLocDisp, 'String', {'First bound at sec:', num2str(FO.startLocDisp, 7)});
+%     set(FO.startLocDisp, 'String', {'First bound at sec:', num2str(FO.startLocDisp, 7)});
     set(FO.startLocDisp, 'Visible', 'on');
 end
-
-
-
-
 
 set(FO.xlimbox, 'String', int2str(round(diff(get(FO.sax{1}, 'XLim')))));
 guidata(gcf, FO);
 end
 
 function ResizeFreqY(direction)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 spec = getappdata(gcf,'spec');
 
 if direction == 1
@@ -2379,7 +2566,7 @@ guidata(gcf, FO);
 end
 
 function CloseDialog(e, src)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 if isempty(FO)
     delete(gcf);
     return;
@@ -2408,7 +2595,7 @@ end
 
 end
 function ChangeSmoothingWindow(e, src)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 spec = getappdata(gcf,'spec');
 unsmoothedSpec = getappdata(gcf,'unsmoothedSpec');
 
@@ -2439,7 +2626,7 @@ guidata(gcf, FO);
 end
 
 function OverlayDisplay(e, src)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 unsmoothedSpec = getappdata(gcf,'unsmoothedSpec');
 
 switch get(FO.overlayDisp, 'Value')
@@ -2600,6 +2787,7 @@ whlt = dlmread([fbasename '.whl']);
 t = (1:size(whlt,1))'/Fs;
 GoodRanges = GoodRanges/Fs;
 end
+
 function  [cWhl, GoodRanges_F] = LoadFromWhlHelper2(Whl, StretchLen, JumpSize, Gap)
 
 % If the gap between the good strech is more than StrethcLen in terms of Whl row number,remove interporated values.
@@ -2738,6 +2926,20 @@ return
 end
 
 
+function motion = LoadTimeStampValuePairs(tos,fname,varname);
+if ~exist('varname','var')
+    t = load(fname);
+else
+    t = load(fname,varname);
+end
+fn = fieldnames(t);
+t = getfield(t,fn{1});
+vals = t(:,2);
+times = t(:,1);
+motion = resample(vals,length(tos),length(times));
+
+end
+
 
 function [xml] = LoadXmlIn(fbasename)
 
@@ -2827,7 +3029,7 @@ function goToSecond(obj,event)
 % set FO.sax
 
 
-FO = guidata(gcf);%get guidata
+FO = guidata(obj);%get guidata
 xmax = diff(FO.lims);%max x possible
 gotopoint = str2num(get(FO.gotosecondbox, 'String'));
 oldrange = get(FO.sax{1}, 'XLim');
@@ -2873,7 +3075,7 @@ end
 
 function EventNumber(e, src)
 
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 EN = get(FO.eventDisp, 'Value') - 1;
 
 oldNum = FO.eventNum;
@@ -2900,12 +3102,12 @@ end
 end
 
 function addEvent(location)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 EN = FO.eventNum;
 FO.Events = [FO.Events; EN, location];
 guidata(gcf, FO);
 updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 % FO.CurrEventLines{end + 1} = [];
 % 
 % for i = 1:FO.nCh
@@ -2937,7 +3139,7 @@ updateEEG;
 end
 
 function deleteEvent(location)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 x1 = get(gca, 'XLim');
 EN = FO.eventNum;
 events = FO.Events;
@@ -2949,7 +3151,7 @@ if (abs(location - events(ind1(id), 2))/diff(x1)) < 0.01;
     FO.Events = events;
     guidata(gcf, FO);
     updateEventLines(events(events(:, 1) == EN, 2));
-    FO = guidata(gcf);
+    obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     
     FO.currAction = 'Browse';
     set(gcf, 'Pointer', 'hand');
@@ -2962,7 +3164,7 @@ UpdateText;
 end
 
 function updateEventLines(newTimes)
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 if isempty(newTimes)
     for i = 1:length(FO.CurrEventLines)
         set(FO.CurrEventLines{i}, 'XData', [], 'YData', []);
@@ -3041,7 +3243,7 @@ guidata(gcf, FO);
 end
 
 function nextEvent
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 events = FO.Events;
 EN = FO.eventNum;
 if isempty(events)
@@ -3089,7 +3291,7 @@ end
 
 
 function previousEvent
-FO = guidata(gcf);
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 events = FO.Events;
 EN = FO.eventNum;
 if isempty(events)
@@ -4172,4 +4374,536 @@ else
 	%200Mb for windows machin
 	
 end
+end
+
+function bool = inttoboolIn(ints,totalpoints)
+% Takes a series of start-stop intervals (one row for each int, each row is
+% [startpoint stoppoint]) and converts to a boolean with length
+% (totalpoints) with zeros by default but 1s wherever points are inside
+% "ints".  If totalpoints is not input then length is set by the last point
+% in the last int.
+
+warning off
+
+if ~exist('totalpoints','var')
+    totalpoints = 1;
+end
+
+bool = zeros(1,totalpoints);
+for a = 1:size(ints,1);
+    bool(round(ints(a,1)):round(ints(a,2))) = 1;
+end
+end
+
+function FO = ViewAutoScoreThresholds(obj,event)
+
+FO = guidata(obj);
+baseName = FO.baseName;
+
+if ~exist([baseName '_SleepScore_FromStateEditor.mat'],'file');
+    histsandthreshs = SSHistogramsAndThresholds_In(baseName);
+else
+    load([baseName '_SleepScore_FromStateEditor.mat'],'histsandthreshs')
+end
+
+%what about defaulting back to original values??... reset button... how to
+%keep threshs from first first?... in SSHistogramsAndThresholds_In save
+%original data in special place?
+
+h = figure('position',[940 5 480 720]);
+
+ax1 = subplot(3,1,1);hold on;
+bar(histsandthreshs.swhistbins,histsandthreshs.swhist)
+swline = imline(ax1,[histsandthreshs.swthresh histsandthreshs.swthresh],ylim(ax1));
+set(swline,'UserData','swline')
+id = addNewPositionCallback(swline,@(pos) title(mat2str(pos,3)));
+xlabel('SWS Band Power')
+ylabel('Counts (sec)')
+ResetToInitButton_sw = uicontrol('style', 'pushbutton', 'String', 'Init', 'Units', 'normalized', 'Position',  [0.85, 0.95, 0.15, 0.05]);
+set(ResetToInitButton_sw,'Callback',@ResetToInitSw);
+ResetToOrigButton_sw = uicontrol('style', 'pushbutton', 'String', 'Orig', 'Units', 'normalized', 'Position',  [0.85, 0.9, 0.15, 0.05]);
+set(ResetToOrigButton_sw,'Callback',@ResetToOrigSw);
+
+ax2 = subplot(3,1,2);hold on;
+bar(histsandthreshs.EMGhistbins,histsandthreshs.EMGhist)
+EMGline = imline(ax2,[histsandthreshs.EMGthresh histsandthreshs.EMGthresh],ylim(ax2));
+set(EMGline,'UserData','EMGline')
+id = addNewPositionCallback(EMGline,@(pos) title(mat2str(pos,3)));
+xlabel('EMG (300-600Hz Correlation)')
+ylabel('Counts (sec)')
+ResetToInitButton_EMG = uicontrol('style', 'pushbutton', 'String', 'Init', 'Units', 'normalized', 'Position',  [0.85, 0.62, 0.15, 0.05]);
+set(ResetToInitButton_EMG,'Callback',@ResetToInitEMG);
+ResetToOrigButton_EMG = uicontrol('style', 'pushbutton', 'String', 'Orig', 'Units', 'normalized', 'Position',  [0.85, 0.57, 0.15, 0.05]);
+set(ResetToOrigButton_EMG,'Callback',@ResetToOrigEMG);
+
+ax3 = subplot(3,1,3);hold on;
+bar(histsandthreshs.THhistbins,histsandthreshs.THhist)
+THline = imline(ax3,[histsandthreshs.THthresh histsandthreshs.THthresh],ylim(ax3));
+set(THline,'UserData','THline')
+id = addNewPositionCallback(THline,@(pos) title(mat2str(pos,3)));
+xlabel('Theta ratio (5-10Hz/2-15Hz)')
+ylabel('Counts (sec)')
+ResetToInitButton_TH = uicontrol('style', 'pushbutton', 'String', 'Init', 'Units', 'normalized', 'Position',  [0.85, 0.29, 0.15, 0.05]);
+set(ResetToInitButton_TH,'Callback',@ResetToInitTH);
+ResetToOrigButton_TH = uicontrol('style', 'pushbutton', 'String', 'Orig', 'Units', 'normalized', 'Position',  [0.85, 0.24, 0.15, 0.05]);
+set(ResetToOrigButton_TH,'Callback',@ResetToOrigTH);
+
+ReScoreButton = uicontrol('style', 'pushbutton', 'String', 'Re-Score', 'Units', 'normalized', 'Position',  [0.4, 0.01, 0.2, 0.05]);
+set(ReScoreButton,'Callback',@ReClusterStates_In);
+
+
+AutoClusterFig.fig = h;
+AutoClusterFig.ax1 = ax1;
+AutoClusterFig.ax2 = ax2;
+AutoClusterFig.ax3 = ax3;
+AutoClusterFig.swline = swline;
+AutoClusterFig.EMGline = EMGline;
+AutoClusterFig.THline = THline;
+AutoClusterFig.histsandthreshs_init = histsandthreshs;%store first value
+
+FO.AutoClusterFig = AutoClusterFig;
+FO.histsandthreshs = histsandthreshs;
+if ~isfield(FO,'histsandthreshs_orig')
+    FO.histsandthreshs_orig = histsandthreshs;
+end
+
+%guidata update is done after output
+% guidata(FO.fig,FO)
+
+end
+
+function histsandthreshs = SSHistogramsAndThresholds_In(baseName)
+% Get initial histograms and thresholds as calculated by Dan's code
+
+load([baseName '_StateScoreMetrics.mat'])
+% badtimes = GetBadTimes_In(baseName);
+
+
+%% SWBand power
+numpeaks = 1;
+numbins = 12;
+%numbins = 12; %for Poster...
+while numpeaks ~=2
+    [swhist,swhistbins]= hist(broadbandSlowWave,numbins);
+    
+    [PKS,LOCS] = findpeaks_SleepScore(swhist,'NPeaks',2,'SortStr','descend');
+    LOCS = sort(LOCS);
+    numbins = numbins+1;
+    numpeaks = length(LOCS);
+end
+betweenpeaks = swhistbins(LOCS(1):LOCS(2));
+[dip,diploc] = findpeaks_SleepScore(-swhist(LOCS(1):LOCS(2)),'NPeaks',1,'SortStr','descend');
+swthresh = betweenpeaks(diploc);
+broadbandSlowWave(badtimes,1)=swhistbins(LOCS(1));
+NREMtimes = (broadbandSlowWave >swthresh); %SWS time points
+
+
+%% EMG
+numpeaks = 1;
+numbins = 12;
+while numpeaks ~=2
+    [EMGhist,EMGhistbins]= hist(EMG(NREMtimes==0),numbins);
+    %[EMGhist,EMGhistbins]= hist(EMG,numbins);
+
+    [PKS,LOCS] = findpeaks_SleepScore([0 EMGhist],'NPeaks',2);
+    LOCS = sort(LOCS)-1;
+    numbins = numbins+1;
+    numpeaks = length(LOCS);
+    
+    if numpeaks ==100
+        display('Something is wrong with your EMG')
+        return
+    end
+end
+
+betweenpeaks = EMGhistbins(LOCS(1):LOCS(2));
+[dip,diploc] = findpeaks_SleepScore(-EMGhist(LOCS(1):LOCS(2)),'NPeaks',1,'SortStr','descend');
+
+EMGthresh = betweenpeaks(diploc);
+
+MOVtimes = (broadbandSlowWave<swthresh & EMG>EMGthresh);
+
+
+%% Then Divide Theta... repetition below is same as Dan's code
+numpeaks = 1;
+numbins = 12;
+while numpeaks ~=2 && numbins <=25
+    %[THhist,THhistbins]= hist(thratio(SWStimes==0 & MOVtimes==0),numbins);
+    [THhist,THhistbins]= hist(thratio(MOVtimes==0),numbins);
+
+    [PKS,LOCS] = findpeaks_SleepScore(THhist,'NPeaks',2,'SortStr','descend');
+    LOCS = sort(LOCS);
+    numbins = numbins+1;
+    numpeaks = length(LOCS);
+end
+
+numbins = 12;
+%numbins = 15; %for Poster...
+while numpeaks ~=2 && numbins <=25
+    [THhist,THhistbins]= hist(thratio(NREMtimes==0 & MOVtimes==0),numbins);
+
+    [PKS,LOCS] = findpeaks_SleepScore(THhist,'NPeaks',2,'SortStr','descend');
+    LOCS = sort(LOCS);
+    numbins = numbins+1;
+    numpeaks = length(LOCS);
+end
+
+if length(PKS)==2
+    betweenpeaks = THhistbins(LOCS(1):LOCS(2));
+    [dip,diploc] = findpeaks_SleepScore(-THhist(LOCS(1):LOCS(2)),'NPeaks',1,'SortStr','descend');
+
+    THthresh = betweenpeaks(diploc);
+
+    REMtimes = (broadbandSlowWave<swthresh & EMG<EMGthresh & thratio>THthresh);
+else
+    THthresh = 0;
+    REMtimes =(broadbandSlowWave<swthresh & EMG<EMGthresh);
+end
+
+histsandthreshs = v2struct(swhist,swhistbins,swthresh,EMGhist,EMGhistbins,EMGthresh,THhist,THhistbins,THthresh);
+end
+
+
+% function badtimes = GetBadTimes_In(baseName)
+% 
+% load([baseName '_SWLFP.mat'],'swLFP','sf_LFP')
+% 
+% if sf_LFP == 1250
+%     downsamplefactor = 5;
+% else
+%     display('sf not 1250... if only you made this able to set its own downsample...')
+%     downsamplefactor = 2;
+% end
+% swLFP = downsample(swLFP,downsamplefactor);
+% 
+% freqlist = logspace(0,2,100);
+% %freqlist = linspace(0.5,55.5,111);
+% window = 10;
+% noverlap = 9;
+% window = window*sf_LFP;
+% noverlap = noverlap*sf_LFP;
+% [FFTspec,FFTfreqs,t_FFT] = spectrogram(swLFP,window,noverlap,freqlist,sf_LFP);
+% FFTspec = abs(FFTspec);
+% [zFFTspec,mu,sig] = zscore(log10(FFTspec)');
+% 
+%     %% Remove transients before calculating SW histogram
+%     %this should be it's own whole section - removing/detecting transients
+% totz = zscore(abs(sum(zFFTspec')));
+% badtimes = find(totz>5);
+
+function [states,StateIntervals] = ReClusterStates_In(obj,ev)
+% Recluster based on Dan Levenstein's state clustering... as in Watson 2016
+% and further developed by D Levenstein
+% Code here is based on Dan's code as of July 6, 2016
+
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+
+%% Get thresholds from fig
+% swthresh = FO.histsandthreshs.swthresh;
+% EMGthresh = FO.histsandthreshs.EMGthresh;
+% THthresh = FO.histsandthreshs.THthresh;
+swthresh = getPosition(FO.AutoClusterFig.swline);
+swthresh = swthresh(1,1);
+EMGthresh = getPosition(FO.AutoClusterFig.EMGline);
+EMGthresh = EMGthresh(1,1);
+THthresh = getPosition(FO.AutoClusterFig.THline);
+THthresh = THthresh(1,1);
+FO.histsandthreshs.swthresh = swthresh;
+FO.histsandthreshs.EMGthresh = EMGthresh;
+FO.histsandthreshs.THthresh = THthresh;
+
+minSWS = 6;
+minWnexttoREM = 6;
+minWinREM = 6;       
+minREMinW = 6;
+minREM = 6;
+minWAKE = 6;
+
+
+load([baseName '_StateScoreMetrics.mat'])
+
+% re-do cutoffs etc
+% then do last parts of ClusterStates code
+
+% save as something at .mat level?  Or not yet?  Or maybe prep a struct
+% somewhere to be sent to mat later if saved.
+
+% send to stateeditor and re-display
+
+NREMtimes = (broadbandSlowWave >swthresh);
+MOVtimes = (broadbandSlowWave<swthresh & EMG>EMGthresh);
+
+numpeaks = 1;
+numbins = 12;
+while numpeaks ~=2 && numbins <=25
+    %[THhist,THhistbins]= hist(thratio(SWStimes==0 & MOVtimes==0),numbins);
+    [THhist,THhistbins]= hist(thratio(MOVtimes==0),numbins);
+
+    [PKS,LOCS] = findpeaks_SleepScore(THhist,'NPeaks',2,'SortStr','descend');
+    LOCS = sort(LOCS);
+    numbins = numbins+1;
+    numpeaks = length(LOCS);
+end
+
+numbins = 12;
+%numbins = 15; %for Poster...
+while numpeaks ~=2 && numbins <=25
+    [THhist,THhistbins]= hist(thratio(NREMtimes==0 & MOVtimes==0),numbins);
+
+    [PKS,LOCS] = findpeaks_SleepScore(THhist,'NPeaks',2,'SortStr','descend');
+    LOCS = sort(LOCS);
+    numbins = numbins+1;
+    numpeaks = length(LOCS);
+end
+
+if length(PKS)==2
+    betweenpeaks = THhistbins(LOCS(1):LOCS(2));
+    [dip,diploc] = findpeaks_SleepScore(-THhist(LOCS(1):LOCS(2)),'NPeaks',1,'SortStr','descend');
+
+%     THthresh = betweenpeaks(diploc);
+
+    REMtimes = (broadbandSlowWave<swthresh & EMG<EMGthresh & thratio>THthresh);
+else
+%     THthresh = 0;
+    REMtimes =(broadbandSlowWave<swthresh & EMG<EMGthresh);
+end
+
+
+%OLD:
+%Index Vector: SWS=2, REM=3, MOV=6, NonMOV=1.   
+%(Separate MOV for REM, then join later)
+%IDX = SWStimes+2*REMtimes+5*MOVtimes+1;
+
+%NEW: No separation of MOV and NonMOV WAKE
+%Index Vector: NREM=2, REM=3, WAKE=1. 
+IDX = NREMtimes+2*REMtimes+1;
+
+%Start/end offset due to FFT
+
+
+%% Minimum Interuptions
+INT = IDXtoINT(IDX,3);
+
+%Make the following repeated chunks of code into a single function.
+
+%SWS  (to NonMOV)
+Sints = INT{2};
+Slengths = Sints(:,2)-Sints(:,1);
+shortSints = {Sints(find(Slengths<=minSWS),:)};
+shortSidx = INTtoIDX(shortSints,length(IDX));
+%Change Short SWS to Wake
+IDX(shortSidx==1) = 1;   
+INT = IDXtoINT(IDX,3);
+
+%NonMOV next to REM   (to REM)
+Wints = INT{1};
+trans = (diff(IDX)); %All State Transitions
+WRtrans = find((trans)==-2)+1;  %Just transitions between WAKE, REM
+%Convert to interval indices
+[~,WRtransON] = intersect(Wints(:,1),WRtrans);
+WRtrans = find((trans)==2);
+[~,WRtransOFF] = intersect(Wints(:,2),WRtrans);
+WRtrans = union(WRtransON,WRtransOFF); %On or offset are RW
+%Find WAKE intervals that border REM and are less than min
+Wlengths = Wints(:,2)-Wints(:,1);
+shortWRints = find(Wlengths(WRtrans)<=minWnexttoREM);
+shortWRints = WRtrans(shortWRints);
+shortWRints = {Wints(shortWRints,:)};
+shortWRidx = INTtoIDX(shortWRints,length(IDX));
+%Convert wake to rem
+IDX(shortWRidx==1) = 3;
+INT = IDXtoINT(IDX,3);
+
+
+%NonMOV in REM   (to REM)
+Wints = INT{1};
+trans = (diff(IDX)); %All State Transitions
+WRtrans = find((trans)==-2)+1;  %Just transitions between WAKE, REM
+%Convert to interval indices
+[~,WRtransON] = intersect(Wints(:,1),WRtrans);
+WRtrans = find((trans)==2);
+[~,WRtransOFF] = intersect(Wints(:,2),WRtrans);
+WRtrans = intersect(WRtransON,WRtransOFF); %Both onset and offset are RW
+%Find WAKE intervals that border REM and are less than min
+Wlengths = Wints(:,2)-Wints(:,1);
+shortWRints = find(Wlengths(WRtrans)<=minWinREM);
+shortWRints = WRtrans(shortWRints);
+shortWRints = {Wints(shortWRints,:)};
+shortWRidx = INTtoIDX(shortWRints,length(IDX));
+%Convert wake to rem
+IDX(shortWRidx==1) = 3;
+IDX(IDX==6) = 1; %Convert NonMOV to WAKE
+INT = IDXtoINT(IDX,3);
+
+
+%REM in WAKE   (to WAKE)
+Rints = INT{3};
+trans = (diff(IDX)); %All State Transitions
+WRtrans = find((trans)==2)+1;  %Just transitions between WAKE, REM
+%Convert to interval indices
+[~,WRtransON] = intersect(Rints(:,1),WRtrans);
+WRtrans = find((trans)==-2);
+[~,WRtransOFF] = intersect(Rints(:,2),WRtrans);
+WRtrans = intersect(WRtransON,WRtransOFF); %Both onset and offset are RW
+%Find WAKE intervals that border REM and are less than min
+Rlengths = Rints(:,2)-Rints(:,1);
+shortWRints = find(Rlengths(WRtrans)<=minREMinW);
+shortWRints = WRtrans(shortWRints);
+shortWRints = {Rints(shortWRints,:)};
+shortWRidx = INTtoIDX(shortWRints,length(IDX));
+%Convert REM to WAKE
+IDX(shortWRidx==1) = 1;
+INT = IDXtoINT(IDX,3);
+
+%REM (only applies to REM in the middle of SWS)    (to WAKE)
+Rints = INT{3};
+Rlengths = Rints(:,2)-Rints(:,1);
+shortRints = {Rints(find(Rlengths<=minREM),:)};
+shortRidx = INTtoIDX(shortRints,length(IDX));
+
+IDX(shortRidx==1) = 1;
+INT = IDXtoINT(IDX,3);
+
+
+%WAKE   (to SWS)     essentiall a minimum MA time
+Wints = INT{1};
+Wlengths = Wints(:,2)-Wints(:,1);
+shortWints = {Wints(find(Wlengths<=minWAKE),:)};
+shortWidx = INTtoIDX(shortWints,length(IDX));
+IDX(shortWidx==1) = 2;
+
+INT = IDXtoINT(IDX,3);
+
+%SWS  (to NonMOV)
+Sints = INT{2};
+Slengths = Sints(:,2)-Sints(:,1);
+shortSints = {Sints(find(Slengths<=minSWS),:)};
+shortSidx = INTtoIDX(shortSints,length(IDX));
+%Change Short SWS to Wake
+IDX(shortSidx==1) = 1;   
+INT = IDXtoINT(IDX,3);
+
+
+%% Pad time to match recording time
+offset = t_clus(1)-1;
+INT = cellfun(@(x) x+offset,INT,'UniformOutput',false);
+
+IDX = INTtoIDX(INT,reclength);
+t_IDX = 1:length(IDX);
+IDX = IDX';
+
+stateintervals = INT;
+
+
+NREMints = stateintervals{2};
+REMints = stateintervals{3};
+WAKEints = stateintervals{1};
+
+minPACKdur = 30;
+SWSlengths = NREMints(:,2)-NREMints(:,1);
+packetintervals = NREMints(SWSlengths>=minPACKdur,:);
+
+maxMAdur = 100;
+WAKElengths = WAKEints(:,2)-WAKEints(:,1);
+MAntervals = WAKEints(WAKElengths<=maxMAdur,:);
+WAKEntervals = WAKEints(WAKElengths>maxMAdur,:);
+
+minintdur = 40;
+minSWSdur = 20;
+[episodeintervals{2}] = IDStateEpisode(NREMints,minintdur,minSWSdur);
+
+minintdur = 40;
+minWAKEdur = 20;
+[episodeintervals{1}] = IDStateEpisode(WAKEints,minintdur,minWAKEdur);
+
+minintdur = 40;
+minREMdur = 20;
+[episodeintervals{3}] = IDStateEpisode(REMints,minintdur,minREMdur);
+
+%% Save
+StateIntervals.NREMstate = NREMints;
+StateIntervals.REMstate = REMints;
+StateIntervals.WAKEstate = WAKEntervals;
+StateIntervals.NREMepisode = episodeintervals{2};
+StateIntervals.REMepisode = episodeintervals{3};
+StateIntervals.WAKEeposode = episodeintervals{1};
+StateIntervals.NREMpacket = packetintervals;
+StateIntervals.MAstate = MAntervals;
+load([baseName '_SWLFP.mat'],'SWchannum')
+load([baseName '_ThetaLFP.mat'],'THchannum')
+StateIntervals.metadata.SWchannum = SWchannum;
+StateIntervals.metadata.THchannum = THchannum;
+
+stateslen = max([max(max(StateIntervals.NREMstate)) max(max(StateIntervals.REMstate)) max(max(StateIntervals.WAKEstate)) max(max(StateIntervals.MAstate)) ]); 
+states = zeros(1,stateslen);
+states(find(inttoboolIn(StateIntervals.WAKEstate))) = 1;
+states(find(inttoboolIn(StateIntervals.MAstate))) = 2;
+states(find(inttoboolIn(StateIntervals.NREMstate))) = 3;
+states(find(inttoboolIn(StateIntervals.REMstate))) = 5;
+states = cat(2,states,zeros(1,length(FO.to)-length(states)));
+
+modifyStates(1, states, 0);
+
+histsandthreshs = FO.histsandthreshs;
+save([baseName '_SleepScore_FromStateEditor.mat'],'StateIntervals','histsandthreshs')
+FO.States = states;
+guidata(FO.fig,FO);
+
+end
+
+
+function ResetToOrigSw(obj,ev)
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+y = [0 max(FO.histsandthreshs_orig.swhist)];
+x = [FO.histsandthreshs_orig.swthresh FO.histsandthreshs_orig.swthresh];
+setPosition(FO.AutoClusterFig.swline,x,y);
+end
+
+function ResetToOrigEMG(obj,ev)
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+y = [0 max(FO.histsandthreshs_orig.EMGhist)];
+x = [FO.histsandthreshs_orig.EMGthresh FO.histsandthreshs_orig.EMGthresh];
+setPosition(FO.AutoClusterFig.EMGline,x,y);
+end
+
+function ResetToOrigTH(obj,ev)
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+y = [0 max(FO.histsandthreshs_orig.THhist)];
+x = [FO.histsandthreshs_orig.THthresh FO.histsandthreshs_orig.THthresh];
+setPosition(FO.AutoClusterFig.THline,x,y);
+end
+
+function ResetToInitSw(obj,ev)
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+y = [0 max(FO.AutoClusterFig.histsandthreshs_init.swhist)];
+x = [FO.AutoClusterFig.histsandthreshs_init.swthresh FO.AutoClusterFig.histsandthreshs_init.swthresh];
+setPosition(FO.AutoClusterFig.swline,x,y);
+end
+
+function ResetToInitEMG(obj,ev)
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+y = [0 max(FO.AutoClusterFig.histsandthreshs_init.EMGhist)];
+x = [FO.AutoClusterFig.histsandthreshs_init.EMGthresh FO.AutoClusterFig.histsandthreshs_init.EMGthresh];
+setPosition(FO.AutoClusterFig.EMGline,x,y);
+end
+
+function ResetToInitTH(obj,ev)
+obj = findobj('tag','StateEditorMaster');
+FO = guidata(obj(end));
+baseName = FO.baseName;
+y = [0 max(FO.AutoClusterFig.histsandthreshs_init.THhist)];
+x = [FO.AutoClusterFig.histsandthreshs_init.THthresh FO.AutoClusterFig.histsandthreshs_init.THthresh];
+setPosition(FO.AutoClusterFig.THline,x,y);
 end
