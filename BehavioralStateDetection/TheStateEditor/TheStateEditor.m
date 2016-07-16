@@ -1033,7 +1033,7 @@ FO = rmfield(FO,'unsmoothedSpec');%access only when needed using appdata now
 FO = rmfield(FO,'eeg');%access only when needed using appdata now
 % FO = rmfield(FO,'eegX');%recalculate on the fly using:   eegX = (1:length(FO.eeg{i}))/(FO.eegFS/FO.downsample);
 %%
-guidata(gcf,FO)
+            guidata(FO.fig, FO); 
 
 
 updateEEG;
@@ -1099,7 +1099,7 @@ switch e.Key
             l(2) = FO.lims(2);
         end
         set(FO.sax{1}, 'XLim', l);
-        guidata(gcf, FO);
+        guidata(FO.fig, FO); 
         updateEEG;
         obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
         % updateMidline([]);
@@ -1113,7 +1113,7 @@ switch e.Key
             l(2) = FO.lims(2);
         end
         set(FO.sax{1}, 'XLim', l);
-        guidata(gcf, FO);
+        guidata(FO.fig, FO); 
         updateEEG;
         
         obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
@@ -1248,7 +1248,7 @@ switch e.Key
         
         
         FO.eegShow = FO.eegShow - delta;
-        guidata(gcf, FO);
+        guidata(FO.fig, FO); 
         updateEEG(mean(get(FO.eax{1}, 'XLim')));
         UpdateText;
         return;
@@ -1274,7 +1274,7 @@ switch e.Key
         
         
         FO.eegShow = FO.eegShow + delta;
-        guidata(gcf, FO);
+        guidata(FO.fig, FO); 
         
         updateEEG(mean(get(FO.eax{1}, 'XLim')));
         UpdateText;
@@ -1408,7 +1408,7 @@ end
 %     set(FO.eax{i}, 'XLim', [pos - FO.eegShow/2, pos + FO.eegShow/2]);
 % end
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 
@@ -1825,7 +1825,7 @@ end
 
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.clickPoint = pointTo;
-guidata(gcf, FO);
+guidata(obj, FO);
 if updateEegToClick == 1
     updateEEG(pointTo);
 end
@@ -1904,7 +1904,7 @@ switch lfpClick
                     delta = 0;
             end
             FO.eegShow = FO.eegShow + delta;
-            guidata(gcf, FO);
+            guidata(FO.fig, FO);
             
             updateEEG(mean(get(FO.eax{1}, 'XLim')));
             UpdateText;
@@ -1928,7 +1928,7 @@ switch lfpClick
             
             
             FO.eegShow = FO.eegShow - delta;
-            guidata(gcf, FO);
+            guidata(FO.fig, FO); 
             updateEEG(mean(get(FO.eax{1}, 'XLim')));
             UpdateText;
             return;
@@ -1938,7 +1938,7 @@ end
 
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.clickPoint = pointTo;
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 
 updateEEG(pointTo);
 UpdateText;
@@ -1987,7 +1987,7 @@ if isempty(FO.startLine)
     end
     
     FO.startLocation = location;
-    guidata(gcf, FO);
+    guidata(FO.fig, FO); 
     
 else
     
@@ -1998,11 +1998,11 @@ else
     end
     FO.startLine = {};
     
-    guidata(gcf, FO);
+    guidata(FO.fig, FO); 
     addState(location);
     obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 end
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 UpdateText;
 end
 
@@ -2034,12 +2034,13 @@ FO.States(f(1):f(2)) = newState;
 FO.newStates{end + 1}.state = newState;
 FO.newStates{end}.location = f(1);
 FO.startLocation  = [];
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 modifyStates(f(1), newState);
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 updateEEG;
 UpdateText;
 end
+
 function modifyStates(startLoc, newState, varargin)
 
 if isempty(varargin)
@@ -2047,7 +2048,7 @@ if isempty(varargin)
 else
     makeGrey = varargin{1};
 end
-obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); 
 
 colors = FO.colors;
 rows = FO.rows;
@@ -2066,7 +2067,7 @@ loc = startLoc:(startLoc + length(newState) - 1);
 FO.SM(:, loc, :) = newC;
 FO.madeChanges = 1;
 set(FO.ilab, 'CData', FO.SM);
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 
@@ -2077,7 +2078,7 @@ if FO.stateHistoryNum >= 1
     newState = FO.stateHistory{FO.stateHistoryNum}.state;
     startLoc = FO.stateHistory{FO.stateHistoryNum}.location;
     FO.stateHistoryNum = FO.stateHistoryNum - 1;
-    guidata(gcf, FO);
+    guidata(FO.fig, FO); 
     modifyStates(startLoc, newState);
     obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     latestTrans = max(find(FO.TransHistoryTracker == 1));
@@ -2088,8 +2089,7 @@ else
     b = msgbox('Sorry pal, we are at the beginning of time, there are no changes to undo');
     uiwait(b);
 end
-guidata(gcf, FO);
-
+guidata(FO.fig, FO); 
 end
 
 function redoChange(varargin)
@@ -2099,12 +2099,12 @@ if length(FO.newStates) > FO.stateHistoryNum
     newState = FO.newStates{FO.stateHistoryNum}.state;
     startLoc = FO.newStates{FO.stateHistoryNum}.location;
     
-    guidata(gcf, FO);
+    guidata(FO.fig, FO); 
     modifyStates(startLoc, newState);
     
     latestTrans = max(find(FO.TransHistoryTracker == 0));
     FO.TransHistoryTracker(latestTrans) = 1;
-    guidata(gcf, FO);
+    guidata(FO.fig, FO); 
     set(gcf, 'Name', ['States: ', FO.baseName, '- History moved forward to ', int2str(FO.stateHistoryNum), ' of ', int2str(length(FO.stateHistory))]);
     
 else
@@ -2112,7 +2112,7 @@ else
     uiwait(b);
 end
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 function saved = saveStates
@@ -2203,7 +2203,7 @@ else
         saved = 1;
         uiwait(b);
         FO.madeChanges = 0;
-        guidata(gcf, FO);
+        guidata(FO.fig, FO); 
     catch
         b = msgbox(['Warning, failed to save ', fileName, '.mat']);
         saved = 0;
@@ -2214,7 +2214,7 @@ else
     
 end
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 
@@ -2331,7 +2331,7 @@ end
 % end
 % successMsg = [successMsg(1:(end - 2)), '.'];
 % 
-% guidata(gcf, FO);
+% guidata(FO.fig, FO); 
 % b = msgbox(successMsg);
 % uiwait(b);
 
@@ -2344,7 +2344,7 @@ end
 modifyStates(1, newS.(st), 0);
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.madeChanges = 0;
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 
@@ -2462,7 +2462,7 @@ obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 % end
 % successMsg = [successMsg(1:(end - 2)), '.'];
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 % b = msgbox(successMsg);
 % uiwait(b);
 
@@ -2475,7 +2475,7 @@ end
 modifyStates(1, newS.(st), 0);
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.madeChanges = 0;
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 
@@ -2536,7 +2536,7 @@ else
 end
 
 set(FO.xlimbox, 'String', int2str(round(diff(get(FO.sax{1}, 'XLim')))));
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 function ResizeFreqY(direction)
@@ -2562,7 +2562,7 @@ else
         end
     end
 end
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 function CloseDialog(e, src)
@@ -2622,7 +2622,7 @@ else
 end
 
 setappdata(gcf,'spec',spec)
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 end
 
 function OverlayDisplay(e, src)
@@ -2670,7 +2670,7 @@ switch get(FO.overlayDisp, 'Value')
                 delete(FO.overlayLines{i})
             end
             FO.overlayLines = {};
-            guidata(gcf, FO);
+            guidata(FO.fig, FO); 
         end
         helpdlg({['Input must be a .mat file with n collumns of time bins'],...
             ['(n = ', int2str(length(FO.to)),') and up to ', int2str(FO.nCh), ' rows. Successive rows of the'],...
@@ -2678,7 +2678,7 @@ switch get(FO.overlayDisp, 'Value')
             ['spectrogram channels']});
         [name, path] = uigetfile('*mat', 'Choose overlay data to load:');
         if name == 0
-            guidata(gcf, FO);
+            guidata(FO.fig, FO); 
             set(FO.overlayDisp, 'Value', 1);
         else
             
@@ -2695,7 +2695,7 @@ switch get(FO.overlayDisp, 'Value')
                 uiwait(b);
                 
                 set(FO.overlayDisp, 'Value', 1);
-                guidata(gcf, FO);
+                guidata(FO.fig, FO); 
                 return;
             end
             
@@ -2717,7 +2717,7 @@ switch get(FO.overlayDisp, 'Value')
         
 end
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 UpdateText;
 
 end
@@ -3084,17 +3084,17 @@ if EN > 0
 else
     FO.eventNum = 'none';
 end
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 
 updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
 
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 if strcmp(FO.currAction, 'AddEvent')
     if EN == 0
         FO.currAction = 'Browse';
         set(gcf, 'Pointer', 'hand');
-        guidata(gcf, FO);
+        guidata(FO.fig, FO); 
     end
     UpdateText;
 end
@@ -3105,7 +3105,7 @@ function addEvent(location)
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 EN = FO.eventNum;
 FO.Events = [FO.Events; EN, location];
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 % FO.CurrEventLines{end + 1} = [];
@@ -3134,7 +3134,7 @@ obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
 FO.currAction = 'Browse';
 set(gcf, 'Pointer', 'hand');
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 updateEEG;
 end
 
@@ -3149,7 +3149,7 @@ if (abs(location - events(ind1(id), 2))/diff(x1)) < 0.01;
    
     events = events((1:size(events, 1)) ~= ind1(id), :);
     FO.Events = events;
-    guidata(gcf, FO);
+    guidata(FO.fig, FO); 
     updateEventLines(events(events(:, 1) == EN, 2));
     obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
     
@@ -3157,7 +3157,7 @@ if (abs(location - events(ind1(id), 2))/diff(x1)) < 0.01;
     set(gcf, 'Pointer', 'hand');
 end
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 
 updateEEG;
 UpdateText;
@@ -3238,7 +3238,7 @@ end
 set(FO.eventDisp, 'String', newString);
 
 
-guidata(gcf, FO);
+guidata(FO.fig, FO); 
 
 end
 
@@ -4844,12 +4844,12 @@ states(find(inttoboolIn(StateIntervals.NREMstate))) = 3;
 states(find(inttoboolIn(StateIntervals.REMstate))) = 5;
 states = cat(2,states,zeros(1,length(FO.to)-length(states)));
 
-modifyStates(1, states, 0);
+FO.States = states;
+guidata(FO.fig,FO);
+modifyStates(1, states, 1);
 
 histsandthreshs = FO.histsandthreshs;
 save([baseName '_SleepScore_FromStateEditor.mat'],'StateIntervals','histsandthreshs')
-FO.States = states;
-guidata(FO.fig,FO);
 
 end
 
