@@ -300,10 +300,18 @@ else
         global answer1
         answer1 = 0;
         
+        if exist([baseName '_SleepScoreLFP.mat'],'file')
+            load([baseName '_SleepScoreLFP.mat'],'SWchannum')
+            load([baseName '_SleepScoreLFP.mat'],'THchannum')
+            defaultchans = [num2str(SWchannum),',',num2str(THchannum)];
+        else
+            defaultchans = '';
+        end
+        
         inputFig = figure('Position', [280   453   550   250], 'MenuBar', 'none', 'numbertitle', 'off', 'name', [baseName, ' channel selection']);
         warning('off', 'MATLAB:hg:default_child_strategy:IllegalPermutation')
         annotation('textbox',  'Position', [0.02, 0.87, 0.9, 0.07], 'string', ['\bf\fontsize{10}Please choose up to 3 eeg channels (base 1, nCh = ', int2str(nCh), '):'], 'EdgeColor', 'none');
-        Channels1 = uicontrol('style', 'edit', 'FontSize', 10, 'Units', 'Normalized', 'Position', [0.37, 0.75, 0.45, 0.08]);
+        Channels1 = uicontrol('style', 'edit', 'FontSize', 10, 'Units', 'Normalized', 'Position', [0.37, 0.75, 0.45, 0.08],'String',defaultchans);
         set(Channels1, 'HorizontalAlignment', 'left');
         
         
@@ -534,7 +542,11 @@ else
                 varname = [];
 %                 b = msgbox(['Note: Motion vector must be 1xn where n is the number of time bins in seconds (n = ', int2str(length(fspec{1}.to)), ')']);
 %                 uiwait(b);
-                [name, path] = uigetfile('*.mat', 'Choose a file with time:val pairs (ie EMGCorr):');
+                if exist([baseName '_EMGCorr.mat'],'file');
+                    [name, path] = uigetfile('*.mat', 'Choose a file with time:val pairs (ie EMGCorr):',[baseName '_EMGCorr.mat']);
+                else
+                    [name, path] = uigetfile('*.mat', 'Choose a file with time:val pairs (ie EMGCorr):');
+                end
                 matobj = matfile(fullfile(path,name));
                 w = whos(matobj);
                 if length(w)>1
@@ -2234,7 +2246,6 @@ end
 function LoadStates
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 
-
 global answer1;
 answer1 = 0;
 FO.loadFig = figure('Position', [382   353   438   200], 'Name', 'Load');
@@ -2273,66 +2284,79 @@ else
         return;
     end
     
-    newS = load([path, name]);
     
-    if ~isstruct(newS)
-        warndlg('Input must be a structure with fields ''.states'', ''.events'' and/or ''.transitions''.')
-        return;
-    end
-    
-    loaded = {};
-    if isfield(newS, 'States')
-        st = 'States';
+    if strcmp(name(end-14:end),'_SleepScore.mat')
+       load([path,name])
+       stateslen = max([max(max(StateIntervals.NREMstate)) max(max(StateIntervals.REMstate)) max(max(StateIntervals.WAKEstate)) ]); 
+       states = zeros(1,stateslen);
+       states(find(inttoboolIn(StateIntervals.WAKEstate))) = 1;
+       states(find(inttoboolIn(StateIntervals.MAstate))) = 2;
+       states(find(inttoboolIn(StateIntervals.NREMstate))) = 3;
+       states(find(inttoboolIn(StateIntervals.REMstate))) = 5;
+       states = cat(2,states,zeros(1,numel(FO.States)-length(states)));
+       FO.States = states;
     else
-        st = 'states';
-    end
-    
-    if loadStates == 1    
-        if isfield(newS, st)
-            if length(size(newS.states))==2 && sum(size(newS.states)==1) && numel(newS.states) == numel(FO.States)%make tolerant to vert or horiz vectors
-                newS.states = newS.states(:)';
-            end
+        newS = load([path, name]);
 
-            if sum(size(FO.States) == size(newS.(st))) ~= 2
-                b = msgbox({'Error: states field must be a 1xN vector file', 'where N == the number of bins.'});
-                uiwait(b);
-                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
-                return;
-            end
-
-            FO.States = newS.(st);
-            loaded{end + 1} = 'states vector';
+        if ~isstruct(newS)
+            warndlg('Input must be a structure with fields ''.states'', ''.events'' and/or ''.transitions''.')
+            return;
         end
-    end
-    
-    if loadEvents == 1    
-        if isfield(newS, 'events')
-            events = newS.events;
-            if size(events, 2) ~= 2 & ~isempty(events)
-                b = msgbox({'Error: events field must be a Nx2 matrix file', 'where N == the number of events.'});
-                uiwait(b);
-                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
-                return;
-            end
 
-            FO.Events = events;
-            loaded{end + 1} = 'event matrix';
+        loaded = {};
+        if isfield(newS, 'States')
+            st = 'States';
+        else
+            st = 'states';
         end
-    end
-    
-    
-    if loadTransitions == 1
-        if isfield(newS, 'transitions')
-            transitions = newS.transitions;
-            if size(transitions, 2) ~= 3 & ~isempty(transitions)
-                b = msgbox({'Error: transitions field must be a Nx3 matrix file', 'where N == the number of transitions.'});
-                uiwait(b);
-                obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
-                return;
+
+        if loadStates == 1    
+            if isfield(newS, st)
+                if length(size(newS.states))==2 && sum(size(newS.states)==1) && numel(newS.states) == numel(FO.States)%make tolerant to vert or horiz vectors
+                    newS.states = newS.states(:)';
+                end
+
+                if sum(size(FO.States) == size(newS.(st))) ~= 2
+                    b = msgbox({'Error: states field must be a 1xN vector file', 'where N == the number of bins.'});
+                    uiwait(b);
+                    obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+                    return;
+                end
+
+                FO.States = newS.(st);
+                loaded{end + 1} = 'states vector';
             end
-            
-            FO.Transitions = transitions;
-            loaded{end + 1} = 'transition matrix';
+        end
+
+        if loadEvents == 1    
+            if isfield(newS, 'events')
+                events = newS.events;
+                if size(events, 2) ~= 2 & ~isempty(events)
+                    b = msgbox({'Error: events field must be a Nx2 matrix file', 'where N == the number of events.'});
+                    uiwait(b);
+                    obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+                    return;
+                end
+
+                FO.Events = events;
+                loaded{end + 1} = 'event matrix';
+            end
+        end
+
+
+        if loadTransitions == 1
+            if isfield(newS, 'transitions')
+                transitions = newS.transitions;
+                if size(transitions, 2) ~= 3 & ~isempty(transitions)
+                    b = msgbox({'Error: transitions field must be a Nx3 matrix file', 'where N == the number of transitions.'});
+                    uiwait(b);
+                    obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
+                    return;
+                end
+
+                FO.Transitions = transitions;
+                loaded{end + 1} = 'transition matrix';
+            end
         end
     end
 end
@@ -2948,7 +2972,7 @@ fn = fieldnames(t);
 t = getfield(t,fn{1});
 vals = t(:,2);
 times = t(:,1);
-motion = resample(vals,length(tos),length(times));
+motion = ResampleTolerant(vals,length(tos),length(times));
 
 end
 
