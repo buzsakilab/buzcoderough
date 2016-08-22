@@ -2378,7 +2378,7 @@ if isempty(FO.Events)
 else
     updateEventLines(FO.Events(FO.Events(:, 1) == EN, 2));
 end
-modifyStates(1, newS.(st), 0);
+modifyStates(1, FO.States, 0);
 obj = findobj('tag','StateEditorMaster');  FO = guidata(obj); ;
 FO.madeChanges = 0;
 guidata(FO.fig, FO); 
@@ -4771,7 +4771,6 @@ shortRidx = INTtoIDX(shortRints,length(IDX));
 
 IDX(shortRidx==1) = 1;
 INT = IDXtoINT(IDX,3);
-
 
 %WAKE   (to SWS)     essentiall a minimum MA time
 Wints = INT{1};
