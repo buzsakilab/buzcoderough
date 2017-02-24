@@ -10,16 +10,16 @@ function [h px py] = IcsiStat(rgx,rgy,icsi,tR,tC,tMax)
 %     rgx: 1st spike train
 %     rgy: 2nd spike train
 %     icsi: common isi comted with Icsi()
-%     tR: refractory period
-%     tC: censored time
-%     tMax: maximal time considered for ISI
+%     tR: refractory period (in seconds)
+%     tC: censored time (in seconds)
+%     tMax: maximal time considered for ISI (in seconds)
 %     
 % OUTPUT:
 %     h: binary value telling of the test was successfully passed or not.
 %     
 % Adrien Peyrache, 2012
 
-t = [0:0.1:tMax];
+t = [0:0.0001:tMax];
 Sx = zeros(length(t),1);
 Sy = zeros(length(t),1);
 
@@ -39,7 +39,6 @@ for ii=1:length(t)
     Fxy = sum(icsi<t(ii))/Mxy;
     Fx = sum(isiX<t(ii))/Mx;
     Fy = sum(isiY<t(ii))/My;
-    
     if isnan(Fxy)
         Fxy=0;
     end
@@ -50,8 +49,7 @@ for ii=1:length(t)
         Fx=0;
     end
     Sx(ii) = sqrt(Mxy*Mx/(Mxy+Mx))*(Fxy-Fx);
-    Sy(ii) = sqrt(Mxy*My/(Mxy+My))*(Fxy-Fy);
-    
+    Sy(ii) = sqrt(Mxy*My/(Mxy+My))*(Fxy-Fy);    
 end
 
 f = (tR-tC)/(tMax-tC);

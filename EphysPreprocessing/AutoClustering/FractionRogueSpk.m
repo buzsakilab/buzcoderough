@@ -14,8 +14,8 @@ else
     fr = 1/median(diff(rg));
     
     %a = r*T/(2*(tR-tC)*nS);
-    a = r/(2*(tR-tC)*nS*fr);
-    
+	    a = r/(2*(tR-tC)*nS*fr);
+	    
 %     delta = 1-4*a;
 %     l = zeros(2,1);
 %     l(1) = (1+sqrt(delta))/2;
